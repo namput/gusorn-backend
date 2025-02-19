@@ -25,6 +25,10 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/tutor", tutorRoutes);
 app.use("/subscription", subscriptionRoutes);
 app.use("/website", websiteRoutes);
+app.get("/", (req, res) => {
+  res.send("Welcome to Tutor App");
+}
+);
 
 
 
