@@ -26,9 +26,9 @@ app.use("/tutor", tutorRoutes);
 app.use("/subscription", subscriptionRoutes);
 app.use("/website", websiteRoutes);
 app.get("/", (req, res) => {
-  res.send("Welcome to Tutor App");
-}
-);
+  res.redirect("https://www.gusorn.com"); // เปลี่ยน URL ปลายทางที่ต้องการ
+});
+
 
 
 
