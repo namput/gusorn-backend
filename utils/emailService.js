@@ -15,7 +15,7 @@ exports.sendVerificationEmail = async (email, token) => {
     to: email,
     subject: "ยืนยันอีเมลของคุณ",
     html: `<p>กรุณาคลิกลิงก์ด้านล่างเพื่อยืนยันอีเมลของคุณ:</p>
-           <a href="${verifyLink}">${verifyLink}</a>`,
+           <a href="${verifyLink}">คลิกที่นี่เพื่อยินยันการสมัครสมาชิกกับ GuSorn </a>`,
   };
 
   return transporter.sendMail(mailOptions);

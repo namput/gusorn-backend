@@ -139,3 +139,25 @@ exports.verifyEmail = async (req, res) => {
     res.status(400).json({ message: "Token ไม่ถูกต้องหรือหมดอายุ" });
   }
 };
+exports.checkVerification = async (req, res) => {
+  try {
+    const { email } = req.query;
+
+    if (!email) {
+      return res.status(400).json({ message: "กรุณาระบุอีเมล" });
+    }
+
+    // ค้นหาผู้ใช้จากอีเมล
+    const user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      return res.status(404).json({ message: "ไม่พบอีเมลนี้ในระบบ", verified: false });
+    }
+
+    // ส่งสถานะการยืนยันอีเมลกลับไป
+    return res.json({ verified: user.isVerified });
+  } catch (error) {
+    console.error("เกิดข้อผิดพลาด:", error);
+    return res.status(500).json({ message: "เกิดข้อผิดพลาดในเซิร์ฟเวอร์", verified: false });
+  }
+};
