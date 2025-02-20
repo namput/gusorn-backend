@@ -1,6 +1,6 @@
-import { DataTypes } from "sequelize";
-import sequelize from "../config/database.js";
-import User from "./User.js";
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/database");
+const User = require("./User");
 
 const TutorProfile = sequelize.define(
   "TutorProfile",
@@ -14,7 +14,7 @@ const TutorProfile = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: "users", // ✅ ใช้ tableName เดียวกันกับที่ User กำหนด
+        model: "users",
         key: "id",
       },
       onDelete: "CASCADE",
@@ -138,8 +138,8 @@ const TutorProfile = sequelize.define(
     },
   },
   {
-    tableName: "tutor_profiles", // ✅ ตั้งชื่อ table ให้เป็นระบบ
-    timestamps: true, // ✅ เพิ่ม createdAt & updatedAt
+    tableName: "tutor_profiles",
+    timestamps: true,
   }
 );
 
@@ -147,4 +147,4 @@ const TutorProfile = sequelize.define(
 User.hasOne(TutorProfile, { foreignKey: "userId", onDelete: "CASCADE", onUpdate: "CASCADE" });
 TutorProfile.belongsTo(User, { foreignKey: "userId" });
 
-export default TutorProfile;
+module.exports = TutorProfile;
