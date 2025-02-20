@@ -113,3 +113,36 @@ exports.createTutorProfile = async (req, res) => {
     res.status(500).json({ error: "เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์" });
   }
 };
+
+const TutorProfile = require("../models/TutorProfile");
+
+exports.createProfile = async (req, res) => {
+  try {
+    const { userId, name, profileImage, phone, location, bio, subjects, levels, teachingMethods, languages, experience, price, availableLocations, packageType, courses, schedule, socialLinks, websiteUrl } = req.body;
+
+    const newProfile = await TutorProfile.create({
+      userId,
+      name,
+      profileImage,
+      phone,
+      location,
+      bio,
+      subjects,
+      levels,
+      teachingMethods,
+      languages,
+      experience,
+      price,
+      availableLocations,
+      package: packageType,
+      courses,
+      schedule,
+      socialLinks,
+      websiteUrl,
+    });
+
+    res.json(newProfile);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

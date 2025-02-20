@@ -1,45 +1,52 @@
-const { DataTypes } = require("sequelize");
-const sequelize = require("../config/database"); // ดึง sequelize จาก config
-const User = require("./User"); // เชื่อมโยงกับโมเดล User
+import { DataTypes } from "sequelize";
+import sequelize from "../config/database.js";
+import User from "./User.js";
 
-const TutorProfile = sequelize.define(
-  "TutorProfile",
-  {
-    id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
-      primaryKey: true,
-    },
-    userId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: User, // เชื่อมกับตาราง users
-        key: "id",
-      },
-      onDelete: "CASCADE",
-    },
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    subject: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    experience: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    rating: {
-      type: DataTypes.FLOAT,
-      defaultValue: 0,
-    },
+const TutorProfile = sequelize.define("TutorProfile", {
+  id: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
+    primaryKey: true,
   },
-  {
-    tableName: "tutor_profiles", // ตั้งชื่อตารางให้ตรงกับฐานข้อมูล
-    timestamps: true, // ใช้ createdAt, updatedAt
-  }
-);
+  userId: {
+    type: DataTypes.UUID,
+    allowNull: false,
+    references: {
+      model: User,
+      key: "id",
+    },
+    onDelete: "CASCADE",
+  },
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  profileImage: DataTypes.STRING,
+  phone: DataTypes.STRING,
+  location: DataTypes.STRING,
+  bio: DataTypes.TEXT,
+  subjects: {
+    type: DataTypes.ARRAY(DataTypes.STRING),
+    allowNull: false,
+  },
+  levels: DataTypes.ARRAY(DataTypes.STRING),
+  teachingMethods: DataTypes.ARRAY(DataTypes.STRING),
+  languages: DataTypes.ARRAY(DataTypes.STRING),
+  experience: DataTypes.STRING,
+  price: DataTypes.INTEGER,
+  availableLocations: DataTypes.ARRAY(DataTypes.STRING),
+  package: {
+    type: DataTypes.ENUM("Free", "Premium", "Pro"),
+    defaultValue: "Free",
+  },
+  courses: DataTypes.JSONB,
+  schedule: DataTypes.JSONB,
+  socialLinks: DataTypes.JSONB,
+  websiteUrl: DataTypes.STRING,
+});
 
-module.exports = TutorProfile;
+// ✅ กำหนดความสัมพันธ์ระหว่าง User และ TutorProfile
+User.hasOne(TutorProfile, { foreignKey: "userId", onDelete: "CASCADE" });
+TutorProfile.belongsTo(User, { foreignKey: "userId" });
+
+export default TutorProfile;

@@ -161,3 +161,4 @@ exports.checkVerification = async (req, res) => {
     return res.status(500).json({ message: "เกิดข้อผิดพลาดในเซิร์ฟเวอร์", verified: false });
   }
 };
+
