@@ -114,7 +114,6 @@ exports.createTutorProfile = async (req, res) => {
   }
 };
 
-const TutorProfile = require("../models/TutorProfile");
 
 exports.createProfile = async (req, res) => {
   try {
