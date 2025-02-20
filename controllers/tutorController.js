@@ -117,7 +117,21 @@ exports.createTutorProfile = async (req, res) => {
 
 exports.createProfile = async (req, res) => {
   try {
-    const { userId, name, profileImage, phone, location, bio, subjects, levels, teachingMethods, languages, experience, price, availableLocations, packageType, courses, schedule, socialLinks, websiteUrl } = req.body;
+    const {
+      userId,
+      name,
+      profileImage,
+      phone,
+      location,
+      bio,
+      subjects,
+      levels,
+      teachingMethods,
+      experience,
+      price,
+      courses,
+      schedule,
+    } = req.body;
 
     const newProfile = await TutorProfile.create({
       userId,
@@ -129,19 +143,15 @@ exports.createProfile = async (req, res) => {
       subjects,
       levels,
       teachingMethods,
-      languages,
       experience,
       price,
-      availableLocations,
-      package: packageType,
       courses,
       schedule,
-      socialLinks,
-      websiteUrl,
     });
 
-    res.json(newProfile);
+    res.json({ success: true, message: "✅ บันทึกโปรไฟล์สำเร็จ!", data: newProfile });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
+

@@ -6,7 +6,7 @@ const TutorProfile = sequelize.define(
   "TutorProfile",
   {
     id: {
-      type: DataTypes.INTEGER, // ✅ เปลี่ยนจาก UUID เป็น INTEGER
+      type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
     },
@@ -41,7 +41,7 @@ const TutorProfile = sequelize.define(
       allowNull: true,
     },
     subjects: {
-      type: DataTypes.TEXT, // ✅ ใช้ TEXT แทน JSON
+      type: DataTypes.TEXT,
       allowNull: false,
       get() {
         return JSON.parse(this.getDataValue("subjects") || "[]");
@@ -70,16 +70,6 @@ const TutorProfile = sequelize.define(
         this.setDataValue("teachingMethods", JSON.stringify(value));
       },
     },
-    languages: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-      get() {
-        return JSON.parse(this.getDataValue("languages") || "[]");
-      },
-      set(value) {
-        this.setDataValue("languages", JSON.stringify(value));
-      },
-    },
     experience: {
       type: DataTypes.STRING(255),
       allowNull: true,
@@ -87,20 +77,6 @@ const TutorProfile = sequelize.define(
     price: {
       type: DataTypes.INTEGER,
       allowNull: true,
-    },
-    availableLocations: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-      get() {
-        return JSON.parse(this.getDataValue("availableLocations") || "[]");
-      },
-      set(value) {
-        this.setDataValue("availableLocations", JSON.stringify(value));
-      },
-    },
-    package: {
-      type: DataTypes.ENUM("Free", "Premium", "Pro"),
-      defaultValue: "Free",
     },
     courses: {
       type: DataTypes.TEXT,
@@ -122,20 +98,6 @@ const TutorProfile = sequelize.define(
         this.setDataValue("schedule", JSON.stringify(value));
       },
     },
-    socialLinks: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-      get() {
-        return JSON.parse(this.getDataValue("socialLinks") || "{}");
-      },
-      set(value) {
-        this.setDataValue("socialLinks", JSON.stringify(value));
-      },
-    },
-    websiteUrl: {
-      type: DataTypes.STRING(255),
-      allowNull: true,
-    },
   },
   {
     tableName: "tutor_profiles",
@@ -143,8 +105,11 @@ const TutorProfile = sequelize.define(
   }
 );
 
-// ✅ กำหนดความสัมพันธ์ระหว่าง User และ TutorProfile
-User.hasOne(TutorProfile, { foreignKey: "userId", onDelete: "CASCADE", onUpdate: "CASCADE" });
+User.hasOne(TutorProfile, {
+  foreignKey: "userId",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
 TutorProfile.belongsTo(User, { foreignKey: "userId" });
 
 module.exports = TutorProfile;
