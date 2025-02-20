@@ -1,15 +1,10 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const bodyParser = require("body-parser");
 const path = require("path");
+const fs = require("fs");
 
 const sequelize = require("./config/database");
-const User = require("./models/User");
-const TutorProfile = require("./models/TutorProfile");
-const Subscription = require("./models/Subscription");
-const Website = require("./models/Website");
-
 const userRoutes = require("./routes/userRoutes");
 const authRoutes = require("./routes/authRoutes");
 const tutorRoutes = require("./routes/tutorRoutes");
@@ -17,11 +12,18 @@ const subscriptionRoutes = require("./routes/subscriptionRoutes");
 const websiteRoutes = require("./routes/websiteRoutes");
 
 const app = express();
-app.use(cors());
-app.use(bodyParser.json());
 
-// ✅ Static file serving
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// ✅ ตรวจสอบและสร้างโฟลเดอร์ `uploads/` อัตโนมัติ
+const uploadDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// ✅ Middleware
+app.use(cors());
+app.use(express.json({ limit: "500mb" })); // ✅ กำหนด JSON Request Body สูงสุด 50MB
+app.use(express.urlencoded({ extended: true, limit: "500mb" })); // ✅ รองรับ Form Data ขนาดใหญ่
+app.use("/uploads", express.static(uploadDir)); // ✅ รองรับ Static File
 
 // ✅ Routes
 app.use("/users", userRoutes);
@@ -29,14 +31,15 @@ app.use("/auth", authRoutes);
 app.use("/tutor", tutorRoutes);
 app.use("/subscription", subscriptionRoutes);
 app.use("/website", websiteRoutes);
+
 app.get("/", (req, res) => {
-  res.redirect("https://www.gusorn.com"); // เปลี่ยน URL ปลายทางที่ต้องการ
+  res.redirect("https://www.gusorn.com"); // เปลี่ยน URL ปลายทาง
 });
 
 // ✅ ฟังก์ชันซิงค์ฐานข้อมูล
 async function syncDatabase() {
   try {
-    await sequelize.sync({ alter: true });
+    await sequelize.sync({ force: false }); // ✅ ไม่ลบข้อมูลเดิม
     console.log("✅ ซิงค์ฐานข้อมูลสำเร็จ!");
   } catch (error) {
     console.error("❌ เกิดข้อผิดพลาดในการซิงค์ฐานข้อมูล:", error);

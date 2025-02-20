@@ -1,126 +1,12 @@
 const TutorProfile = require("../models/TutorProfile");
-exports.getTutorProfile = async (req, res) => {
-    try {
-      // ตรวจสอบว่า JWT มี userId หรือไม่
-      if (!req.user || !req.user.userId) {
-        return res.status(401).json({ message: "Unauthorized: ไม่พบข้อมูลผู้ใช้" });
-      }
-  
-      const userId = req.user.userId; // ดึง userId จาก JWT
-  
-      // ค้นหาโปรไฟล์ของติวเตอร์
-      const tutorProfile = await TutorProfile.findOne({ where: { userId } });
-  
-      if (!tutorProfile) {
-        return res.status(404).json({ message: "ไม่พบโปรไฟล์ติวเตอร์" });
-      }
-  
-      res.status(200).json(tutorProfile);
-    } catch (error) {
-      console.error("เกิดข้อผิดพลาดในการดึงโปรไฟล์ติวเตอร์:", error);
-      res.status(500).json({ error: "เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์" });
-    }
-  };
-
-exports.updateTutorProfile = async (req, res) => {
-  try {
-    const userId = req.user.userId; // ดึงค่า userId จาก JWT
-    
-    const { name, bio, subjects, price, photo } = req.body;
-
-    // ค้นหาโปรไฟล์ติวเตอร์
-    let tutorProfile = await TutorProfile.findOne({ where: { userId } });
-
-    if (!tutorProfile) {
-      return res.status(404).json({ message: "ไม่พบโปรไฟล์ติวเตอร์" });
-    }
-
-    // อัปเดตข้อมูล
-    tutorProfile.name = name || tutorProfile.name;
-    tutorProfile.bio = bio || tutorProfile.bio;
-    tutorProfile.subjects = subjects || tutorProfile.subjects;
-    tutorProfile.price = price || tutorProfile.price;
-    tutorProfile.photo = photo || tutorProfile.photo;
-
-    await tutorProfile.save();
-
-    res.status(200).json({
-      message: "อัปเดตโปรไฟล์สำเร็จ!",
-      tutorProfile,
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-exports.uploadTutorPhoto = async (req, res) => {
-  try {
-    const userId = req.user.userId; // ดึง userId จาก JWT
-
-    if (!req.file) {
-      return res.status(400).json({ message: "กรุณาอัปโหลดไฟล์รูปภาพ" });
-    }
-
-    // สร้าง URL ของรูปภาพ
-    const photoUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
-
-    // ค้นหาและอัปเดตรูปภาพโปรไฟล์ของติวเตอร์
-    let tutorProfile = await TutorProfile.findOne({ where: { userId } });
-
-    if (!tutorProfile) {
-      return res.status(404).json({ message: "ไม่พบโปรไฟล์ติวเตอร์" });
-    }
-
-    tutorProfile.photo = photoUrl;
-    await tutorProfile.save();
-
-    res.status(200).json({
-      message: "อัปโหลดรูปโปรไฟล์สำเร็จ!",
-      photo: photoUrl,
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-exports.createTutorProfile = async (req, res) => {
-  try {
-    if (!req.user || !req.user.userId) {
-      return res.status(401).json({ message: "Unauthorized: ไม่พบข้อมูลผู้ใช้" });
-    }
-
-    const { name, subject, experience, rating } = req.body;
-    const userId = req.user.userId;
-
-    // ตรวจสอบว่าผู้ใช้มีโปรไฟล์ติวเตอร์อยู่แล้วหรือไม่
-    const existingProfile = await TutorProfile.findOne({ where: { userId } });
-    if (existingProfile) {
-      return res.status(400).json({ message: "คุณมีโปรไฟล์ติวเตอร์อยู่แล้ว" });
-    }
-
-    // ✅ สร้างโปรไฟล์ติวเตอร์ใหม่
-    const tutorProfile = await TutorProfile.create({
-      userId,
-      name,
-      subject,
-      experience,
-      rating: rating || 0,
-    });
-
-    res.status(201).json({ message: "สร้างโปรไฟล์ติวเตอร์สำเร็จ", tutorProfile });
-  } catch (error) {
-    console.error("เกิดข้อผิดพลาด:", error);
-    res.status(500).json({ error: "เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์" });
-  }
-};
-
+const User = require("../models/User");
 
 exports.createProfile = async (req, res) => {
   try {
+    console.log("🔍 Request Body:", req.body);
+
     const {
-      userId,
       name,
-      profileImage,
       phone,
       location,
       bio,
@@ -133,25 +19,52 @@ exports.createProfile = async (req, res) => {
       schedule,
     } = req.body;
 
+    // ✅ แปลง JSON String เป็น Object ถ้ามาจาก FormData
+    const parsedSubjects = subjects ? JSON.parse(subjects) : [];
+    const parsedLevels = levels ? JSON.parse(levels) : [];
+    const parsedMethods = teachingMethods ? JSON.parse(teachingMethods) : [];
+    const parsedCourses = courses ? JSON.parse(courses) : [];
+    const parsedSchedule = schedule ? JSON.parse(schedule) : [];
+
+    // ✅ ดึง userId จาก JWT (ที่มาจาก `authenticateUser`)
+    const userId = req.user.id;
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(400).json({ success: false, message: "❌ ไม่พบผู้ใช้ที่เกี่ยวข้อง" });
+    }
+
+    // ✅ จัดการไฟล์อัปโหลด (ถ้ามี)
+    let profileImageUrl = "";
+    let introVideoUrl = "";
+
+    if (req.files?.profileImage) {
+      profileImageUrl = `uploads/${Date.now()}_${req.files.profileImage[0].originalname}`;
+    }
+    if (req.files?.introVideo) {
+      introVideoUrl = `uploads/${Date.now()}_${req.files.introVideo[0].originalname}`;
+    }
+
+    // ✅ สร้างโปรไฟล์ติวเตอร์
     const newProfile = await TutorProfile.create({
       userId,
       name,
-      profileImage,
+      profileImage: profileImageUrl,
       phone,
       location,
       bio,
-      subjects,
-      levels,
-      teachingMethods,
+      subjects: parsedSubjects,
+      levels: parsedLevels,
+      teachingMethods: parsedMethods,
       experience,
       price,
-      courses,
-      schedule,
+      courses: parsedCourses,
+      schedule: parsedSchedule,
     });
 
     res.json({ success: true, message: "✅ บันทึกโปรไฟล์สำเร็จ!", data: newProfile });
+
   } catch (error) {
+    console.error("❌ Error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
-

@@ -1,11 +1,17 @@
-
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
 
-// กำหนด Storage สำหรับอัปโหลดไฟล์
+// ✅ ตรวจสอบว่ามีโฟลเดอร์ uploads หรือไม่ ถ้าไม่มีให้สร้าง
+const uploadDir = "uploads/";
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// ✅ กำหนด Storage สำหรับอัปโหลดไฟล์
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/"); // เก็บไฟล์ในโฟลเดอร์ uploads
+    cb(null, uploadDir); // 📂 เก็บไฟล์ในโฟลเดอร์ uploads
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
@@ -13,23 +19,24 @@ const storage = multer.diskStorage({
   },
 });
 
-// ตรวจสอบประเภทไฟล์
+// ✅ ตรวจสอบประเภทไฟล์ที่รองรับ
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png/;
+  const allowedTypes = /jpeg|jpg|png|mp4|mov|avi/; // ✅ รองรับวิดีโอ
   const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
   const mimetype = allowedTypes.test(file.mimetype);
 
   if (extname && mimetype) {
     return cb(null, true);
   } else {
-    return cb(new Error("อนุญาตเฉพาะไฟล์รูปภาพ JPEG, JPG, PNG เท่านั้น!"));
+    return cb(new Error("อนุญาตเฉพาะไฟล์ JPEG, JPG, PNG, MP4, MOV, AVI เท่านั้น!"));
   }
 };
 
+// ✅ ตั้งค่าอัปโหลดไฟล์ (จำกัด 5MB สำหรับรูป และ 50MB สำหรับวิดีโอ)
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // จำกัดขนาดไฟล์ 5MB
+  limits: { fileSize: 500 * 1024 * 1024 }, // ✅ จำกัดไฟล์ที่ 50MB
 });
 
 module.exports = upload;
