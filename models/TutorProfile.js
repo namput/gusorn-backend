@@ -2,51 +2,149 @@ import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
 import User from "./User.js";
 
-const TutorProfile = sequelize.define("TutorProfile", {
-  id: {
-    type: DataTypes.UUID,
-    defaultValue: DataTypes.UUIDV4,
-    primaryKey: true,
-  },
-  userId: {
-    type: DataTypes.UUID,
-    allowNull: false,
-    references: {
-      model: User,
-      key: "id",
+const TutorProfile = sequelize.define(
+  "TutorProfile",
+  {
+    id: {
+      type: DataTypes.INTEGER, // ✅ เปลี่ยนจาก UUID เป็น INTEGER
+      autoIncrement: true,
+      primaryKey: true,
     },
-    onDelete: "CASCADE",
+    userId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: "users", // ✅ ใช้ tableName เดียวกันกับที่ User กำหนด
+        key: "id",
+      },
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
+    },
+    name: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+    },
+    profileImage: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    phone: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+    },
+    location: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    bio: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    subjects: {
+      type: DataTypes.TEXT, // ✅ ใช้ TEXT แทน JSON
+      allowNull: false,
+      get() {
+        return JSON.parse(this.getDataValue("subjects") || "[]");
+      },
+      set(value) {
+        this.setDataValue("subjects", JSON.stringify(value));
+      },
+    },
+    levels: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      get() {
+        return JSON.parse(this.getDataValue("levels") || "[]");
+      },
+      set(value) {
+        this.setDataValue("levels", JSON.stringify(value));
+      },
+    },
+    teachingMethods: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      get() {
+        return JSON.parse(this.getDataValue("teachingMethods") || "[]");
+      },
+      set(value) {
+        this.setDataValue("teachingMethods", JSON.stringify(value));
+      },
+    },
+    languages: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      get() {
+        return JSON.parse(this.getDataValue("languages") || "[]");
+      },
+      set(value) {
+        this.setDataValue("languages", JSON.stringify(value));
+      },
+    },
+    experience: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    price: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    availableLocations: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      get() {
+        return JSON.parse(this.getDataValue("availableLocations") || "[]");
+      },
+      set(value) {
+        this.setDataValue("availableLocations", JSON.stringify(value));
+      },
+    },
+    package: {
+      type: DataTypes.ENUM("Free", "Premium", "Pro"),
+      defaultValue: "Free",
+    },
+    courses: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      get() {
+        return JSON.parse(this.getDataValue("courses") || "[]");
+      },
+      set(value) {
+        this.setDataValue("courses", JSON.stringify(value));
+      },
+    },
+    schedule: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      get() {
+        return JSON.parse(this.getDataValue("schedule") || "[]");
+      },
+      set(value) {
+        this.setDataValue("schedule", JSON.stringify(value));
+      },
+    },
+    socialLinks: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      get() {
+        return JSON.parse(this.getDataValue("socialLinks") || "{}");
+      },
+      set(value) {
+        this.setDataValue("socialLinks", JSON.stringify(value));
+      },
+    },
+    websiteUrl: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
   },
-  name: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  profileImage: DataTypes.STRING,
-  phone: DataTypes.STRING,
-  location: DataTypes.STRING,
-  bio: DataTypes.TEXT,
-  subjects: {
-    type: DataTypes.ARRAY(DataTypes.STRING),
-    allowNull: false,
-  },
-  levels: DataTypes.ARRAY(DataTypes.STRING),
-  teachingMethods: DataTypes.ARRAY(DataTypes.STRING),
-  languages: DataTypes.ARRAY(DataTypes.STRING),
-  experience: DataTypes.STRING,
-  price: DataTypes.INTEGER,
-  availableLocations: DataTypes.ARRAY(DataTypes.STRING),
-  package: {
-    type: DataTypes.ENUM("Free", "Premium", "Pro"),
-    defaultValue: "Free",
-  },
-  courses: DataTypes.JSONB,
-  schedule: DataTypes.JSONB,
-  socialLinks: DataTypes.JSONB,
-  websiteUrl: DataTypes.STRING,
-});
+  {
+    tableName: "tutor_profiles", // ✅ ตั้งชื่อ table ให้เป็นระบบ
+    timestamps: true, // ✅ เพิ่ม createdAt & updatedAt
+  }
+);
 
 // ✅ กำหนดความสัมพันธ์ระหว่าง User และ TutorProfile
-User.hasOne(TutorProfile, { foreignKey: "userId", onDelete: "CASCADE" });
+User.hasOne(TutorProfile, { foreignKey: "userId", onDelete: "CASCADE", onUpdate: "CASCADE" });
 TutorProfile.belongsTo(User, { foreignKey: "userId" });
 
 export default TutorProfile;
