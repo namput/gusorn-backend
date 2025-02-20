@@ -127,13 +127,13 @@ exports.verifyEmail = async (req, res) => {
     }
 
     if (user.isVerified) {
-      return res.status(400).json({ message: "อีเมลนี้ได้รับการยืนยันแล้ว" });
+      return res.redirect("https://www.gusorn.com"); 
     }
 
     user.isVerified = true;
     await user.save();
 
-    res.status(200).json({ message: "ยืนยันอีเมลสำเร็จ!" });
+    return res.redirect("https://www.gusorn.com"); 
   } catch (error) {
     console.error("เกิดข้อผิดพลาด:", error);
     res.status(400).json({ message: "Token ไม่ถูกต้องหรือหมดอายุ" });
