@@ -28,20 +28,28 @@ app.use(express.urlencoded({ extended: true, limit: "1030mb" })); // ✅ รอ�
 app.use("/uploads", express.static(uploadDir)); // ✅ เสิร์ฟไฟล์ที่อัปโหลด
 
 // ✅ Dynamic CORS Configuration
-// const allowedOrigins = ["https://www.gusorn.com"];
-const allowedOrigins = ["https://www.gusorn.com", "http://localhost:5173"];
+
 app.use((req, res, next) => {
+  // const allowedOrigins = ["https://www.gusorn.com"];
+  const allowedOrigins = ["https://www.gusorn.com", "http://localhost:5173"];
   const origin = req.headers.origin;
+
   if (allowedOrigins.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader(
+      "Access-Control-Allow-Methods",
+      "GET, POST, PUT, DELETE, OPTIONS"
+    );
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization"
+    );
+    res.setHeader("Access-Control-Allow-Credentials", "true"); // ✅ สำคัญ!
   }
-  
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
   if (req.path.startsWith("/auth/")) {
     res.setHeader("Access-Control-Allow-Origin", "*"); // ✅ อนุญาตทุก API ที่อยู่ใน /auth/*
-  }  
+  }
 
   if (req.method === "OPTIONS") {
     return res.sendStatus(204);
@@ -66,15 +74,12 @@ app.get("/health", (req, res) => {
 
 // ✅ ฟังก์ชันซิงค์ฐานข้อมูล (ไม่ลบข้อมูลเดิม)
 
-
 // ✅ เริ่มเซิร์ฟเวอร์
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, async () => {
   try {
     await sequelize.authenticate();
     console.log(`✅ Server running on port ${PORT}`);
-
-
   } catch (error) {
     console.error("❌ Database connection failed:", error);
   }
