@@ -21,11 +21,23 @@ if (!fs.existsSync(uploadDir)) {
 
 // ✅ Middleware
 app.use(cors({
-  origin: ["https://www.gusorn.com", "http://localhost:5173"], // ✅ อนุญาตให้ Frontend ใช้ API
-  methods: ["GET", "POST", "PUT", "DELETE"], // ✅ อนุญาต Method ที่ใช้
-  allowedHeaders: ["Content-Type", "Authorization"], // ✅ อนุญาต Header
-  // credentials: true, // ✅ ถ้ามี Cookie หรือ Token ต้องกำหนดเป็น true
+  origin: ["https://www.gusorn.com", "http://localhost:5173"], 
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true, // ✅ รองรับ Credentials
+  preflightContinue: false, 
+  optionsSuccessStatus: 204, // ✅ แก้ไขปัญหา Preflight Request (CORS)
 }));
+app.use((req, res, next) => {
+  const openRoutes = ["/auth/login", "/auth/register"]; // ✅ API ที่ไม่ต้องใช้ Credentials
+  if (openRoutes.includes(req.path)) {
+    res.header("Access-Control-Allow-Origin", "*"); // ✅ อนุญาตทุก Origin เฉพาะ API ที่กำหนด
+    res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type");
+  }
+  next();
+});
+
 
 app.use(express.json({ limit: "500mb" })); // ✅ กำหนด JSON Request Body สูงสุด 50MB
 app.use(express.urlencoded({ extended: true, limit: "500mb" })); // ✅ รองรับ Form Data ขนาดใหญ่
