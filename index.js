@@ -28,8 +28,8 @@ app.use(express.urlencoded({ extended: true, limit: "1030mb" })); // ✅ รอ�
 app.use("/uploads", express.static(uploadDir)); // ✅ เสิร์ฟไฟล์ที่อัปโหลด
 
 // ✅ Dynamic CORS Configuration
-const allowedOrigins = ["https://www.gusorn.com"];
-// const allowedOrigins = ["https://www.gusorn.com", "http://localhost:5173"];
+// const allowedOrigins = ["https://www.gusorn.com"];
+const allowedOrigins = ["https://www.gusorn.com", "http://localhost:5173"];
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
