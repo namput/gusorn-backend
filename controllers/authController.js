@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const { sendVerificationEmail } = require("../utils/emailService");
 const TutorProfile = require("../models/TutorProfile");
+const Subscription = require("../models/Subscription");
 
 exports.register = async (req, res) => {
   try {
@@ -43,50 +44,55 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-
-    // 🔍 ค้นหาผู้ใช้จากฐานข้อมูล
     const user = await User.findOne({ where: { email } });
-    if (!user) {
-      return res.status(401).json({ message: "อีเมลหรือรหัสผ่านไม่ถูกต้อง" });
-    }
+    if (!user) return res.status(401).json({ message: "❌ อีเมลหรือรหัสผ่านไม่ถูกต้อง" });
 
-    // ✅ ตรวจสอบรหัสผ่าน
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({ message: "อีเมลหรือรหัสผ่านไม่ถูกต้อง" });
-    }
+    if (!isMatch) return res.status(401).json({ message: "❌ อีเมลหรือรหัสผ่านไม่ถูกต้อง" });
 
-    // ✅ ตรวจสอบว่าอีเมลได้รับการยืนยันแล้วหรือไม่
     if (!user.isVerified) {
-      return res.status(403).json({ message: "บัญชีของคุณยังไม่ได้รับการยืนยัน กรุณาตรวจสอบอีเมล" });
+      return res.status(403).json({ message: "❌ บัญชีของคุณยังไม่ได้รับการยืนยัน กรุณาตรวจสอบอีเมล" });
     }
 
-    // ✅ ตรวจสอบว่ามีโปรไฟล์หรือไม่
     const tutorProfile = await TutorProfile.findOne({ where: { userId: user.id } });
-    const hasProfile = !!tutorProfile; // แปลงเป็น true/false
+    const hasProfile = !!tutorProfile;
 
-    // ✅ สร้าง JWT Token
-    const token = jwt.sign(
-      { userId: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
-    );
+    // ✅ ดึงข้อมูลแพ็กเกจจาก Subscription
+    const subscription = await Subscription.findOne({ where: { userId: user.id, status: "active" } });
+    
+    let redirectPath = "/select-package";
+    if (!subscription) {
+      redirectPath = "/select-package"; // ❌ ไม่มีแพ็กเกจ → ไปเลือกแพ็กเกจ
+    } else if (subscription.status === "pending") {
+      redirectPath = "/pending-status"; // ⏳ รอการตรวจสอบ
+    } else if (subscription.packageType === "basic") {
+      redirectPath = "/create-profile"; // ✅ Basic 99 บาท → ไปสร้างโปรไฟล์
+    } else {
+      redirectPath = "/dashboard"; // ✅ Standard ขึ้นไป → ไปแดชบอร์ด
+    }
+
+    const token = jwt.sign({ userId: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
     res.status(200).json({
-      message: "เข้าสู่ระบบสำเร็จ",
+      message: "✅ เข้าสู่ระบบสำเร็จ",
       token,
       user: {
         id: user.id,
         email: user.email,
         role: user.role,
       },
-      hasProfile, // ✅ ส่งค่า hasProfile กลับไป
+      hasProfile,
+      package: subscription?.packageType || null,
+      packageStatus: subscription?.status || "none",
+      redirectPath,
     });
+
   } catch (error) {
     console.error("❌ เกิดข้อผิดพลาด:", error);
     res.status(500).json({ error: "❌ เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์" });
   }
 };
+
 
 
 exports.sendVerificationEmail = async (req, res) => {
@@ -169,3 +175,35 @@ exports.checkVerification = async (req, res) => {
   }
 };
 
+exports.subscribePackage = async (req, res) => {
+  try {
+    const { packageType } = req.body;
+    const userId = req.user.userId;
+
+    const packageDetails = {
+      basic: { price: 99 },
+      standard: { price: 199 },
+      premium: { price: 299 },
+      business: { price: 399 },
+    };
+
+    if (!packageDetails[packageType]) {
+      return res.status(400).json({ message: "❌ แพ็กเกจไม่ถูกต้อง" });
+    }
+
+    // ✅ สร้าง Subscription ใหม่
+    const newSubscription = await Subscription.create({
+      userId,
+      packageType,
+      price: packageDetails[packageType].price,
+      status: "pending", // ✅ เริ่มต้นเป็น pending รอตรวจสอบ
+      startDate: new Date(),
+      endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)), // หมดอายุใน 1 เดือน
+    });
+
+    res.status(201).json({ message: "✅ สมัครแพ็กเกจสำเร็จ!", subscription: newSubscription });
+  } catch (error) {
+    console.error("❌ เกิดข้อผิดพลาด:", error);
+    res.status(500).json({ error: "❌ เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์" });
+  }
+};

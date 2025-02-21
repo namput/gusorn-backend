@@ -3,6 +3,7 @@ const User = require("./models/User");
 const TutorProfile = require("./models/TutorProfile");
 const Subscription = require("./models/Subscription");
 const Website = require("./models/Website");
+const PaymentProof = require("./models/PaymentProof");
 
 async function syncDatabase() {
   try {
