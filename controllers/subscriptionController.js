@@ -5,7 +5,7 @@ const User = require("../models/User");
 exports.subscribePackage = async (req, res) => {
   try {
     const { packageType } = req.body;
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
     // ✅ ตรวจสอบว่าแพ็กเกจที่เลือกถูกต้องหรือไม่
     const validPackages = ["basic", "standard", "premium", "business"];
@@ -47,7 +47,7 @@ exports.subscribePackage = async (req, res) => {
 // ✅ API: ตรวจสอบสถานะ Subscription ของผู้ใช้
 exports.getSubscriptionStatus = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const subscription = await Subscription.findOne({ where: { userId } });
 
     if (!subscription) {

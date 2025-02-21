@@ -1,6 +1,7 @@
-const { PaymentProof } = require("../models");
+
 const path = require("path");
 const fs = require("fs");
+const PaymentProof = require("../models/PaymentProof");
 
 // ✅ ตรวจสอบโฟลเดอร์อัปโหลด
 const uploadDir = path.join(__dirname, "../uploads/payment_proofs");

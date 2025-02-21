@@ -12,6 +12,7 @@ const authRoutes = require("./routes/authRoutes");
 const tutorRoutes = require("./routes/tutorRoutes");
 const subscriptionRoutes = require("./routes/subscriptionRoutes");
 const websiteRoutes = require("./routes/websiteRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
 
 const app = express();
 
@@ -64,6 +65,7 @@ app.use("/auth", authRoutes);
 app.use("/tutor", tutorRoutes);
 app.use("/subscription", subscriptionRoutes);
 app.use("/website", websiteRoutes);
+app.use("/payment", paymentRoutes);
 
 app.get("/", (req, res) => {
   res.redirect("https://www.gusorn.com");
