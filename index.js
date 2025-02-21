@@ -61,6 +61,9 @@ app.use("/website", websiteRoutes);
 app.get("/", (req, res) => {
   res.redirect("https://www.gusorn.com");
 });
+app.get("/health", (req, res) => {
+  res.json({ status: "running" });
+});
 
 // ✅ ฟังก์ชันซิงค์ฐานข้อมูล (ไม่ลบข้อมูลเดิม)
 
