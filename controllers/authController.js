@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const { sendVerificationEmail } = require("../utils/emailService");
+const TutorProfile = require("../models/TutorProfile");
 
 exports.register = async (req, res) => {
   try {
@@ -43,24 +44,28 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // ตรวจสอบว่าผู้ใช้มีอยู่หรือไม่
+    // 🔍 ค้นหาผู้ใช้จากฐานข้อมูล
     const user = await User.findOne({ where: { email } });
     if (!user) {
       return res.status(401).json({ message: "อีเมลหรือรหัสผ่านไม่ถูกต้อง" });
     }
 
-    // ตรวจสอบรหัสผ่าน
+    // ✅ ตรวจสอบรหัสผ่าน
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: "อีเมลหรือรหัสผ่านไม่ถูกต้อง" });
     }
 
-    // ตรวจสอบว่าอีเมลถูกยืนยันแล้วหรือยัง
+    // ✅ ตรวจสอบว่าอีเมลได้รับการยืนยันแล้วหรือไม่
     if (!user.isVerified) {
       return res.status(403).json({ message: "บัญชีของคุณยังไม่ได้รับการยืนยัน กรุณาตรวจสอบอีเมล" });
     }
 
-    // สร้าง Token
+    // ✅ ตรวจสอบว่ามีโปรไฟล์หรือไม่
+    const tutorProfile = await TutorProfile.findOne({ where: { userId: user.id } });
+    const hasProfile = !!tutorProfile; // แปลงเป็น true/false
+
+    // ✅ สร้าง JWT Token
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
@@ -75,12 +80,14 @@ exports.login = async (req, res) => {
         email: user.email,
         role: user.role,
       },
+      hasProfile, // ✅ ส่งค่า hasProfile กลับไป
     });
   } catch (error) {
-    console.error("เกิดข้อผิดพลาด:", error);
-    res.status(500).json({ error: "เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์" });
+    console.error("❌ เกิดข้อผิดพลาด:", error);
+    res.status(500).json({ error: "❌ เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์" });
   }
 };
+
 
 exports.sendVerificationEmail = async (req, res) => {
   try {
