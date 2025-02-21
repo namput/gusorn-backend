@@ -2,39 +2,40 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
-// ✅ ตรวจสอบว่ามีโฟลเดอร์ `uploads/` หรือไม่ ถ้าไม่มีให้สร้าง
+// ✅ ตรวจสอบและสร้างโฟลเดอร์ `uploads/`
 const uploadDir = path.join(__dirname, "..", "uploads");
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
   console.log("📂 สร้างโฟลเดอร์ uploads สำเร็จ!");
 }
 
-// ✅ ตั้งค่า Storage สำหรับอัปโหลดไฟล์
+// ✅ กำหนดขนาดไฟล์สูงสุด
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_VIDEO_SIZE = 1024 * 1024 * 1024; // 200MB
+
+// ✅ กำหนด Storage สำหรับอัปโหลดไฟล์
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadDir); // 📂 บันทึกไฟล์ในโฟลเดอร์ uploads
+    cb(null, uploadDir); // 📂 บันทึกไฟล์ลงโฟลเดอร์ uploads
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname)); // ตั้งชื่อไฟล์ใหม่
+    cb(null, uniqueSuffix + path.extname(file.originalname)); // ตั้งชื่อไฟล์ให้ไม่ซ้ำกัน
   },
 });
 
 // ✅ ตรวจสอบประเภทและขนาดไฟล์
 const fileFilter = (req, file, cb) => {
-  const imageTypes = /jpeg|jpg|png|webp/;
-  const videoTypes = /mp4|mov|avi/;
-  const extname = path.extname(file.originalname).toLowerCase();
-  const mimetype = file.mimetype;
+  const imageTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+  const videoTypes = ["video/mp4", "video/quicktime", "video/x-msvideo"];
 
-  // ✅ จำกัดขนาดแยกกัน (ภาพ: 5MB, วิดีโอ: 200MB)
-  if (imageTypes.test(extname) && imageTypes.test(mimetype)) {
-    if (file.size > 10 * 1024 * 1024) {
+  if (imageTypes.includes(file.mimetype)) {
+    if (file.size > MAX_IMAGE_SIZE) {
       req.fileValidationError = "❌ ไฟล์รูปภาพต้องไม่เกิน 5MB!";
       return cb(null, false);
     }
-  } else if (videoTypes.test(extname) && videoTypes.test(mimetype)) {
-    if (file.size > 1024 * 1024 * 1024) {
+  } else if (videoTypes.includes(file.mimetype)) {
+    if (file.size > MAX_VIDEO_SIZE) {
       req.fileValidationError = "❌ ไฟล์วิดีโอต้องไม่เกิน 200MB!";
       return cb(null, false);
     }
@@ -49,6 +50,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage,
   fileFilter,
+  limits: { fileSize: MAX_VIDEO_SIZE }, // **ใช้ max video size (ใหญ่สุด)**
 });
 
 module.exports = upload;

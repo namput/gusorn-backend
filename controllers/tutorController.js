@@ -1,79 +1,67 @@
 const fs = require("fs");
 const TutorProfile = require("../models/TutorProfile");
 const User = require("../models/User");
+
 exports.createProfile = async (req, res) => {
   try {
     console.log("🔍 Request Body:", req.body);
     console.log("📂 Uploaded Files:", req.files);
 
     const {
-      name,
+      fullName,
       phone,
-      email, // ✅ เพิ่ม Email
+      email,
+      introduction,
       location,
-      bio,
-      subjects,
-      levels,
       teachingMethods,
-      ageGroups, // ✅ เพิ่ม AgeGroups
-      experience,
-      price,
+      ageGroups,
+      subjects,
       courses,
       schedule,
+      price,
     } = req.body;
 
-    const parseJSON = (data) => {
-      try {
-        return data ? JSON.parse(data) : [];
-      } catch (err) {
-        console.error("❌ JSON Parsing Error:", err);
-        return [];
-      }
-    };
-
-    const parsedSubjects = parseJSON(subjects);
-    const parsedLevels = parseJSON(levels);
-    const parsedMethods = parseJSON(teachingMethods);
-    const parsedAgeGroups = parseJSON(ageGroups); // ✅ เพิ่ม AgeGroups
-    const parsedCourses = parseJSON(courses);
-    const parsedSchedule = parseJSON(schedule);
-
-    const userId = req.user.id;
-    const user = await User.findByPk(userId);
-    if (!user) {
-      return res.status(400).json({ success: false, message: "❌ ไม่พบผู้ใช้ที่เกี่ยวข้อง" });
+    // ✅ ตรวจสอบว่ามี `userId` มาจาก JWT หรือไม่
+    console.log("🔐 Authenticated User:", req.user);
+    
+    const userId = req.user?.userId; // ต้องแน่ใจว่า `authenticateUser` Middleware ใช้ถูกต้อง
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "❌ Unauthorized: ไม่พบ User ID" });
     }
 
-    let profileImageUrl = "";
-    let introVideoUrl = "";
-
-    if (req.files?.profileImage) {
-      const imageFile = req.files.profileImage[0];
-      profileImageUrl = `uploads/${Date.now()}_${imageFile.originalname}`;
+    // ✅ ตรวจสอบว่า Email ถูกต้องหรือไม่
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ success: false, message: "❌ รูปแบบ Email ไม่ถูกต้อง" });
     }
 
-    if (req.files?.introVideo) {
-      const videoFile = req.files.introVideo[0];
-      introVideoUrl = `uploads/${Date.now()}_${videoFile.originalname}`;
-    }
+    // ✅ แปลง JSON String เป็น Object
+    const parsedSubjects = JSON.parse(subjects || "[]");
+    const parsedCourses = JSON.parse(courses || "[]");
+    const parsedSchedule = JSON.parse(schedule || "[]");
+    const parsedTeachingMethods = JSON.parse(teachingMethods || "[]");
+    const parsedAgeGroups = JSON.parse(ageGroups || "[]");
 
+    // ✅ ตรวจสอบไฟล์อัปโหลด
+    let profileImageUrl = req.files?.profileImage?.[0]?.filename || "";
+    let introVideoUrl = req.files?.introVideo?.[0]?.filename || "";
+
+    // ✅ บันทึกข้อมูลลงฐานข้อมูล
     const newProfile = await TutorProfile.create({
-      userId,
-      name,
-      email, // ✅ บันทึก Email
+      userId, // 🔥 ต้องใส่ userId เข้าไปเพื่อผูกกับผู้ใช้
+      name: fullName,
       phone,
+      email,
+      introduction,
       location,
-      bio,
-      subjects: parsedSubjects,
-      levels: parsedLevels,
-      teachingMethods: parsedMethods,
-      ageGroups: parsedAgeGroups, // ✅ บันทึก AgeGroups
-      experience,
-      price,
-      courses: parsedCourses,
-      schedule: parsedSchedule,
       profileImage: profileImageUrl,
       introVideo: introVideoUrl,
+      teachingMethods: parsedTeachingMethods,
+      ageGroups: parsedAgeGroups,
+      subjects: parsedSubjects,
+      courses: parsedCourses,
+      schedule: parsedSchedule,
+      price,
     });
 
     res.json({ success: true, message: "✅ บันทึกโปรไฟล์สำเร็จ!", data: newProfile });
