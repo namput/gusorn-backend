@@ -2,16 +2,17 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
-// ✅ ตรวจสอบว่ามีโฟลเดอร์ uploads หรือไม่ ถ้าไม่มีให้สร้าง
-const uploadDir = "uploads/";
+// ✅ ตรวจสอบว่ามีโฟลเดอร์ `uploads/` หรือไม่ ถ้าไม่มีให้สร้าง
+const uploadDir = path.join(__dirname, "..", "uploads");
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
+  console.log("📂 สร้างโฟลเดอร์ uploads สำเร็จ!");
 }
 
-// ✅ กำหนด Storage สำหรับอัปโหลดไฟล์
+// ✅ ตั้งค่า Storage สำหรับอัปโหลดไฟล์
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadDir); // 📂 เก็บไฟล์ในโฟลเดอร์ uploads
+    cb(null, uploadDir); // 📂 บันทึกไฟล์ในโฟลเดอร์ uploads
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
@@ -19,24 +20,35 @@ const storage = multer.diskStorage({
   },
 });
 
-// ✅ ตรวจสอบประเภทไฟล์ที่รองรับ
+// ✅ ตรวจสอบประเภทและขนาดไฟล์
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|mp4|mov|avi/; // ✅ รองรับวิดีโอ
-  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = allowedTypes.test(file.mimetype);
+  const imageTypes = /jpeg|jpg|png|webp/;
+  const videoTypes = /mp4|mov|avi/;
+  const extname = path.extname(file.originalname).toLowerCase();
+  const mimetype = file.mimetype;
 
-  if (extname && mimetype) {
-    return cb(null, true);
+  // ✅ จำกัดขนาดแยกกัน (ภาพ: 5MB, วิดีโอ: 200MB)
+  if (imageTypes.test(extname) && imageTypes.test(mimetype)) {
+    if (file.size > 5 * 1024 * 1024) {
+      req.fileValidationError = "❌ ไฟล์รูปภาพต้องไม่เกิน 5MB!";
+      return cb(null, false);
+    }
+  } else if (videoTypes.test(extname) && videoTypes.test(mimetype)) {
+    if (file.size > 200 * 1024 * 1024) {
+      req.fileValidationError = "❌ ไฟล์วิดีโอต้องไม่เกิน 200MB!";
+      return cb(null, false);
+    }
   } else {
-    return cb(new Error("อนุญาตเฉพาะไฟล์ JPEG, JPG, PNG, MP4, MOV, AVI เท่านั้น!"));
+    return cb(new Error("❌ อนุญาตเฉพาะไฟล์ JPEG, JPG, PNG, WEBP, MP4, MOV, AVI เท่านั้น!"));
   }
+
+  cb(null, true);
 };
 
-// ✅ ตั้งค่าอัปโหลดไฟล์ (จำกัด 5MB สำหรับรูป และ 50MB สำหรับวิดีโอ)
+// ✅ ตั้งค่า Multer
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 500 * 1024 * 1024 }, // ✅ จำกัดไฟล์ที่ 50MB
 });
 
 module.exports = upload;

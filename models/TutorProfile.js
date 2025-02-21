@@ -24,7 +24,18 @@ const TutorProfile = sequelize.define(
       type: DataTypes.STRING(255),
       allowNull: false,
     },
+    email: { // ✅ เพิ่ม email
+      type: DataTypes.STRING(255),
+      allowNull: false,
+      validate: {
+        isEmail: true, // ✅ ตรวจสอบว่าเป็นอีเมลที่ถูกต้อง
+      },
+    },
     profileImage: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    introVideo: { // ✅ เพิ่ม introVideo
       type: DataTypes.STRING(255),
       allowNull: true,
     },
@@ -68,6 +79,16 @@ const TutorProfile = sequelize.define(
       },
       set(value) {
         this.setDataValue("teachingMethods", JSON.stringify(value));
+      },
+    },
+    ageGroups: { // ✅ เพิ่ม ageGroups
+      type: DataTypes.TEXT,
+      allowNull: true,
+      get() {
+        return JSON.parse(this.getDataValue("ageGroups") || "[]");
+      },
+      set(value) {
+        this.setDataValue("ageGroups", JSON.stringify(value));
       },
     },
     experience: {
