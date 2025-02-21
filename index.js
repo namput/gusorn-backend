@@ -24,7 +24,7 @@ app.use(cors({
   origin: ["https://www.gusorn.com", "http://localhost:5173"], // ✅ อนุญาตให้ Frontend ใช้ API
   methods: ["GET", "POST", "PUT", "DELETE"], // ✅ อนุญาต Method ที่ใช้
   allowedHeaders: ["Content-Type", "Authorization"], // ✅ อนุญาต Header
-  credentials: true, // ✅ ถ้ามี Cookie หรือ Token ต้องกำหนดเป็น true
+  // credentials: true, // ✅ ถ้ามี Cookie หรือ Token ต้องกำหนดเป็น true
 }));
 
 app.use(express.json({ limit: "500mb" })); // ✅ กำหนด JSON Request Body สูงสุด 50MB
