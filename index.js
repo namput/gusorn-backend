@@ -28,9 +28,8 @@ app.use(express.urlencoded({ extended: true, limit: "500mb" })); // ✅ รอ�
 app.use("/uploads", express.static(uploadDir)); // ✅ เสิร์ฟไฟล์ที่อัปโหลด
 
 // ✅ Dynamic CORS Configuration
-const allowedOrigins = ["https://www.gusorn.com", "http://localhost:5173"];
-const openRoutes = ["/auth/login", "/auth/register", "/auth/check-verification"];
-
+const allowedOrigins = ["https://www.gusorn.com"];
+// const allowedOrigins = ["https://www.gusorn.com", "http://localhost:5173"];
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
@@ -40,9 +39,9 @@ app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-  if (openRoutes.includes(req.path)) {
-    res.setHeader("Access-Control-Allow-Origin", "*"); // ✅ เฉพาะ API ที่กำหนด
-  }
+  if (req.path.startsWith("/auth/")) {
+    res.setHeader("Access-Control-Allow-Origin", "*"); // ✅ อนุญาตทุก API ที่อยู่ใน /auth/*
+  }  
 
   if (req.method === "OPTIONS") {
     return res.sendStatus(204);
