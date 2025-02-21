@@ -29,12 +29,12 @@ const fileFilter = (req, file, cb) => {
 
   // ✅ จำกัดขนาดแยกกัน (ภาพ: 5MB, วิดีโอ: 200MB)
   if (imageTypes.test(extname) && imageTypes.test(mimetype)) {
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > 10 * 1024 * 1024) {
       req.fileValidationError = "❌ ไฟล์รูปภาพต้องไม่เกิน 5MB!";
       return cb(null, false);
     }
   } else if (videoTypes.test(extname) && videoTypes.test(mimetype)) {
-    if (file.size > 200 * 1024 * 1024) {
+    if (file.size > 1024 * 1024 * 1024) {
       req.fileValidationError = "❌ ไฟล์วิดีโอต้องไม่เกิน 200MB!";
       return cb(null, false);
     }

@@ -23,8 +23,8 @@ if (!fs.existsSync(uploadDir)) {
 
 // ✅ Middleware
 app.use(morgan("dev")); // ✅ Log HTTP Requests
-app.use(express.json({ limit: "500mb" })); // ✅ รองรับ JSON Request Body ใหญ่สุด 500MB
-app.use(express.urlencoded({ extended: true, limit: "500mb" })); // ✅ รองรับ Form Data ขนาดใหญ่
+app.use(express.json({ limit: "1030mb" })); // ✅ รองรับ JSON Request Body ใหญ่สุด 500MB
+app.use(express.urlencoded({ extended: true, limit: "1030mb" })); // ✅ รองรับ Form Data ขนาดใหญ่
 app.use("/uploads", express.static(uploadDir)); // ✅ เสิร์ฟไฟล์ที่อัปโหลด
 
 // ✅ Dynamic CORS Configuration
