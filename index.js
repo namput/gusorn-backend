@@ -37,9 +37,9 @@ app.use((req, res, next) => {
   const origin = req.headers.origin;
 
   // ❌ ปฏิเสธ Origin ที่ไม่ได้รับอนุญาต
-  if (!origin || !allowedOrigins.includes(origin)) {
-    return res.status(403).json({ message: "❌ ไม่ได้รับอนุญาต" });
-  }
+  // if (!origin || !allowedOrigins.includes(origin)) {
+  //   return res.status(403).json({ message: "❌ ไม่ได้รับอนุญาต" });
+  // }
 
   // ✅ Public API: ไม่ใช้ Token
   const publicAuthRoutes = ["/auth/login", "/auth/register", "/auth/verify-email", "/auth/check-verification"];
