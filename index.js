@@ -33,9 +33,11 @@ app.use("/uploads", express.static(uploadDir)); // ✅ เสิร์ฟไฟ�
 app.use((req, res, next) => {
   // const allowedOrigins = ["https://www.gusorn.com"];
   const allowedOrigins = ["https://www.gusorn.com", "http://localhost:5173"];
+  
   const origin = req.headers.origin;
-
   if (allowedOrigins.includes(origin)) {
+    console.log("origin", origin);
+    
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader(
       "Access-Control-Allow-Methods",
@@ -73,6 +75,11 @@ app.get("/", (req, res) => {
 app.get("/health", (req, res) => {
   res.json({ status: "running" });
 });
+// ควรวางไว้หลังจาก route อื่น ๆ ทั้งหมด
+app.get("*", (req, res) => {
+  res.redirect("/");
+});
+
 
 // ✅ ฟังก์ชันซิงค์ฐานข้อมูล (ไม่ลบข้อมูลเดิม)
 
