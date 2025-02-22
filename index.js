@@ -16,7 +16,7 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const { syncDatabase } = require("./syncDB");
 
 const app = express();
-syncDatabase();
+// syncDatabase();
 
 // ✅ ตรวจสอบและสร้างโฟลเดอร์ `uploads/`
 const uploadDir = path.join(__dirname, "uploads");
@@ -45,12 +45,12 @@ app.use((req, res, next) => {
   const publicAuthRoutes = ["/auth/login", "/auth/register", "/auth/verify-email", "/auth/check-verification"];
   
   if (publicAuthRoutes.includes(req.path)) {
-    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   } else {
     // 🔒 Private API: ต้องใช้ Token และ Credentials
-    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
     res.setHeader("Access-Control-Allow-Credentials", "true");
