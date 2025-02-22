@@ -1,6 +1,11 @@
 const fs = require("fs");
+const path = require("path");
 const TutorProfile = require("../models/TutorProfile");
-const User = require("../models/User");
+
+// ✅ ตั้งค่าพาธอัปโหลดให้ตรงกับ `uploadMiddleware.js`
+const UPLOADS_DIR = "/uploads";
+const PROFILE_IMAGES_DIR = `${UPLOADS_DIR}/profile_images`;
+const INTRO_VIDEOS_DIR = `${UPLOADS_DIR}/intro_videos`;
 
 exports.createProfile = async (req, res) => {
   try {
@@ -25,8 +30,8 @@ exports.createProfile = async (req, res) => {
       subjects,
       courses,
       schedule,
-      levels, // ✅ ฟิลด์ที่หายไป
-      experience, // ✅ ฟิลด์ที่หายไป
+      levels,
+      experience,
       price,
     } = req.body;
 
@@ -42,21 +47,26 @@ exports.createProfile = async (req, res) => {
     const parsedSchedule = JSON.parse(schedule || "[]");
     const parsedTeachingMethods = JSON.parse(teachingMethods || "[]");
     const parsedAgeGroups = JSON.parse(ageGroups || "[]");
-    const parsedLevels = JSON.parse(levels || "[]"); // ✅ แปลง Levels ให้เป็น Array
+    const parsedLevels = JSON.parse(levels || "[]");
 
     // ✅ ตรวจสอบไฟล์อัปโหลด (ถ้าไม่มีไฟล์ ให้เป็น `null`)
-    let profileImageUrl = req.files?.profileImage?.[0]?.filename || null;
-    let introVideoUrl = req.files?.introVideo?.[0]?.filename || null;
+    const profileImageUrl = req.files?.profileImage
+      ? `${PROFILE_IMAGES_DIR}/${req.files.profileImage[0].filename}`
+      : null;
+
+    const introVideoUrl = req.files?.introVideo
+      ? `${INTRO_VIDEOS_DIR}/${req.files.introVideo[0].filename}`
+      : null;
 
     // ✅ แมปค่าตรงกับฐานข้อมูล
-    const name = fullName || ""; // `fullName` → `name`
-    const parsedPrice = parseInt(price) || 0; // `price` ต้องเป็น INTEGER
-    const bio = introduction || ""; // `introduction` → `bio`
-    const parsedExperience = experience || null; // `experience` ถ้าไม่มีให้เป็น `null`
+    const name = fullName || "";
+    const parsedPrice = parseInt(price) || 0;
+    const bio = introduction || "";
+    const parsedExperience = experience || null;
 
     // ✅ บันทึกข้อมูลลงฐานข้อมูล
     const newProfile = await TutorProfile.create({
-      userId, // 🔥 ใส่ userId ให้ผูกกับบัญชีผู้ใช้
+      userId,
       name,
       phone,
       email,
@@ -67,11 +77,11 @@ exports.createProfile = async (req, res) => {
       teachingMethods: parsedTeachingMethods,
       ageGroups: parsedAgeGroups,
       subjects: parsedSubjects,
-      levels: parsedLevels, // ✅ ใส่ levels เข้าไป
+      levels: parsedLevels,
       courses: parsedCourses,
       schedule: parsedSchedule,
       price: parsedPrice,
-      experience: parsedExperience, // ✅ ใส่ experience เข้าไป
+      experience: parsedExperience,
     });
 
     res.json({ success: true, message: "✅ บันทึกโปรไฟล์สำเร็จ!", data: newProfile });
