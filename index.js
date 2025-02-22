@@ -30,30 +30,26 @@ app.use(express.json({ limit: "1030mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1030mb" }));
 app.use("/uploads", express.static(uploadDir));
 
-// ✅ ตั้งค่า CORS ให้รองรับ Public และ Private API แยกกัน
+
+
 const allowedOrigins = ["https://www.gusorn.com", "http://localhost:5173"];
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
 
-  // ❌ ปฏิเสธ Origin ที่ไม่ได้รับอนุญาต
-  // if (!origin || !allowedOrigins.includes(origin)) {
-  //   return res.status(403).json({ message: "❌ ไม่ได้รับอนุญาต" });
-  // }
-
-  // ✅ Public API: ไม่ใช้ Token
-  const publicAuthRoutes = ["/auth/login", "/auth/register", "/auth/verify-email", "/auth/check-verification"];
-  
-  if (publicAuthRoutes.includes(req.path)) {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  } else {
-    // 🔒 Private API: ต้องใช้ Token และ Credentials
-    res.setHeader("Access-Control-Allow-Origin", "*");
+  // ✅ อนุญาตเฉพาะ Origin ที่กำหนดเท่านั้น
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    res.setHeader("Access-Control-Allow-Credentials", "true");
+
+    // ✅ Public API: ไม่ต้องใช้ Credentials (Token)
+    const publicAuthRoutes = ["/auth/login", "/auth/register", "/auth/verify-email", "/auth/check-verification"];
+    if (!publicAuthRoutes.includes(req.path)) {
+      res.setHeader("Access-Control-Allow-Credentials", "true"); // 🔒 Private API ใช้ Credentials
+    }
+  } else {
+    return res.status(403).json({ message: "❌ ไม่ได้รับอนุญาต" }); // ❌ Block Origin ที่ไม่ได้รับอนุญาต
   }
 
   if (req.method === "OPTIONS") {
@@ -62,6 +58,7 @@ app.use((req, res, next) => {
 
   next();
 });
+
 
 // ✅ Routes
 app.use("/users", userRoutes);
