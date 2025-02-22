@@ -1,6 +1,6 @@
-
 const path = require("path");
 const fs = require("fs");
+const express = require("express");
 const PaymentProof = require("../models/PaymentProof");
 
 // ✅ ตรวจสอบโฟลเดอร์อัปโหลด
@@ -9,6 +9,7 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
+// ✅ Controller: อัปโหลดหลักฐานการชำระเงิน
 exports.uploadPaymentProof = async (req, res) => {
   try {
     if (!req.file) {
@@ -38,7 +39,5 @@ exports.uploadPaymentProof = async (req, res) => {
   }
 };
 
-// ✅ ให้ Express ให้บริการไฟล์อัปโหลดแบบ Static
-exports.servePaymentProofs = (req, res, next) => {
-  express.static(uploadDir)(req, res, next);
-};
+// ✅ แก้ไข servePaymentProofs ให้เป็น middleware ที่สามารถใช้กับ router.use()
+exports.servePaymentProofs = express.static(uploadDir);
