@@ -33,28 +33,21 @@ app.use("/uploads", express.static(uploadDir)); // ✅ เสิร์ฟไฟ�
 // ✅ Dynamic CORS Configuration
 
 app.use((req, res, next) => {
-  // const allowedOrigins = ["https://www.gusorn.com"];
   const allowedOrigins = ["https://www.gusorn.com", "http://localhost:5173"];
-  
   const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    
-    res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader(
-      "Access-Control-Allow-Methods",
-      "GET, POST, PUT, DELETE, OPTIONS"
-    );
-    res.setHeader(
-      "Access-Control-Allow-Headers",
-      "Content-Type, Authorization"
-    );
-    res.setHeader("Access-Control-Allow-Credentials", "true"); // ✅ สำคัญ!
-    
-    
-  }
 
+  // ✅ ถ้า API เป็น `/auth/*` ให้ใช้ `*` และห้ามใช้ `credentials: true`
   if (req.path.startsWith("/auth/")) {
     res.setHeader("Access-Control-Allow-Origin", "*"); // ✅ อนุญาตทุก API ที่อยู่ใน /auth/*
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    // ❌ ห้ามใช้ Credentials เพราะเราอนุญาตทุก Origin
+  } else if (allowedOrigins.includes(origin)) {
+    // ✅ สำหรับ API อื่น ใช้ Origin ที่กำหนดไว้ และใช้ Credentials
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.setHeader("Access-Control-Allow-Credentials", "true"); // ✅ ใช้เฉพาะ API อื่นๆ ที่ต้องใช้ Token/Cookie
   }
 
   if (req.method === "OPTIONS") {
@@ -63,6 +56,7 @@ app.use((req, res, next) => {
 
   next();
 });
+
 
 // ✅ Routes
 app.use("/users", userRoutes);
