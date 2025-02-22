@@ -49,7 +49,8 @@ app.use((req, res, next) => {
       res.setHeader("Access-Control-Allow-Credentials", "true"); // 🔒 Private API ใช้ Credentials
     }
   } else {
-    return res.status(403).json({ message: "❌ ไม่ได้รับอนุญาต" }); // ❌ Block Origin ที่ไม่ได้รับอนุญาต
+    // return res.status(403).json({ message: "❌ ไม่ได้รับอนุญาต" }); // ❌ Block Origin ที่ไม่ได้รับอนุญาต
+    return res.redirect("https://www.gusorn.com");
   }
 
   if (req.method === "OPTIONS") {
