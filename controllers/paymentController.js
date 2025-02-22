@@ -39,5 +39,40 @@ exports.uploadPaymentProof = async (req, res) => {
   }
 };
 
+
+// ✅ ตรวจสอบสถานะการชำระเงิน
+exports.checkPaymentStatus = async (req, res) => {
+  try {
+    const userId = req.user.userId; // 🔐 ดึง ID ผู้ใช้ที่ล็อกอิน
+
+    // ✅ ดึงข้อมูลล่าสุดของหลักฐานการชำระเงิน
+    const payment = await PaymentProof.findOne({
+      where: { userId },
+      order: [["createdAt", "DESC"]], // เรียงจากล่าสุด
+    });
+
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message: "❌ ไม่พบข้อมูลการชำระเงิน",
+      });
+    }
+
+    res.json({
+      success: true,
+      status: payment.status, // "pending", "approved", "rejected"
+      proofUrl: payment.proofUrl, // URL หลักฐานการชำระเงิน
+    });
+
+  } catch (error) {
+    console.error("❌ Error checking payment status:", error);
+    res.status(500).json({
+      success: false,
+      message: "เกิดข้อผิดพลาด กรุณาลองใหม่",
+    });
+  }
+};
+
+
 // ✅ แก้ไข servePaymentProofs ให้เป็น middleware ที่สามารถใช้กับ router.use()
 exports.servePaymentProofs = express.static(uploadDir);
