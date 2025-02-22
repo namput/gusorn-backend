@@ -3,9 +3,8 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const fs = require("fs");
-const morgan = require("morgan"); // ✅ Log Requests
+const morgan = require("morgan"); 
 const sequelize = require("./config/database");
-
 
 // ✅ Import Routes
 const userRoutes = require("./routes/userRoutes");
@@ -14,10 +13,9 @@ const tutorRoutes = require("./routes/tutorRoutes");
 const subscriptionRoutes = require("./routes/subscriptionRoutes");
 const websiteRoutes = require("./routes/websiteRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
-const { syncDatabase } = require("./syncDB");
 
 const app = express();
-syncDatabase();
+// syncDatabase();
 // ✅ ตรวจสอบและสร้างโฟลเดอร์ `uploads/` อัตโนมัติ
 const uploadDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadDir)) {
@@ -26,28 +24,28 @@ if (!fs.existsSync(uploadDir)) {
 
 // ✅ Middleware
 app.use(morgan("dev")); // ✅ Log HTTP Requests
-app.use(express.json({ limit: "1030mb" })); // ✅ รองรับ JSON Request Body ใหญ่สุด 500MB
-app.use(express.urlencoded({ extended: true, limit: "1030mb" })); // ✅ รองรับ Form Data ขนาดใหญ่
-app.use("/uploads", express.static(uploadDir)); // ✅ เสิร์ฟไฟล์ที่อัปโหลด
+app.use(express.json({ limit: "1050mb" })); 
+app.use(express.urlencoded({ extended: true, limit: "1050mb" })); 
+app.use("/uploads", express.static(uploadDir)); // ✅ ให้บริการไฟล์อัปโหลด
 
-// ✅ Dynamic CORS Configuration
-
+// ✅ ตั้งค่า CORS
+const allowedOrigins = ["https://www.gusorn.com", "http://localhost:5173"];
 app.use((req, res, next) => {
-  const allowedOrigins = ["https://www.gusorn.com", "http://localhost:5173"];
   const origin = req.headers.origin;
 
-  // ✅ ถ้า API เป็น `/auth/*` ให้ใช้ `*` และห้ามใช้ `credentials: true`
+  if (!origin || !allowedOrigins.includes(origin)) {
+    return res.status(403).json({ message: "❌ ไม่ได้รับอนุญาต" });
+  }
+
   if (req.path.startsWith("/auth/")) {
-    res.setHeader("Access-Control-Allow-Origin", "*"); // ✅ อนุญาตทุก API ที่อยู่ใน /auth/*
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    // ❌ ห้ามใช้ Credentials เพราะเราอนุญาตทุก Origin
-  } else if (allowedOrigins.includes(origin)) {
-    // ✅ สำหรับ API อื่น ใช้ Origin ที่กำหนดไว้ และใช้ Credentials
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    res.setHeader("Access-Control-Allow-Credentials", "true"); // ✅ ใช้เฉพาะ API อื่นๆ ที่ต้องใช้ Token/Cookie
+  } else {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.setHeader("Access-Control-Allow-Credentials", "true"); 
   }
 
   if (req.method === "OPTIONS") {
@@ -56,7 +54,6 @@ app.use((req, res, next) => {
 
   next();
 });
-
 
 // ✅ Routes
 app.use("/users", userRoutes);
@@ -72,13 +69,11 @@ app.get("/", (req, res) => {
 app.get("/health", (req, res) => {
   res.json({ status: "running" });
 });
-// ควรวางไว้หลังจาก route อื่น ๆ ทั้งหมด
-app.get("*", (req, res) => {
-  res.redirect("/");
+
+// ✅ แก้ไข Routing `/*` ให้ถูกต้อง
+app.use("*", (req, res) => {
+  res.status(404).json({ message: "❌ ไม่พบเส้นทางนี้" });
 });
-
-
-// ✅ ฟังก์ชันซิงค์ฐานข้อมูล (ไม่ลบข้อมูลเดิม)
 
 // ✅ เริ่มเซิร์ฟเวอร์
 const PORT = process.env.PORT || 3000;
