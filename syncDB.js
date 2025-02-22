@@ -14,8 +14,8 @@ async function syncDatabase() {
     console.error("❌ เกิดข้อผิดพลาดในการซิงค์ฐานข้อมูล:", error);
   } finally {
     await sequelize.close(); // ✅ ปิด Connection เพื่อป้องกันการค้าง
-    process.exit(); // ✅ ออกจากโปรแกรมหลังจากซิงค์เสร็จ
+    // process.exit(); // ✅ ออกจากโปรแกรมหลังจากซิงค์เสร็จ
   }
 }
 
-syncDatabase();
+exports.syncDatabase = syncDatabase;

@@ -6,6 +6,7 @@ const fs = require("fs");
 const morgan = require("morgan"); // ✅ Log Requests
 const sequelize = require("./config/database");
 
+
 // ✅ Import Routes
 const userRoutes = require("./routes/userRoutes");
 const authRoutes = require("./routes/authRoutes");
@@ -13,9 +14,10 @@ const tutorRoutes = require("./routes/tutorRoutes");
 const subscriptionRoutes = require("./routes/subscriptionRoutes");
 const websiteRoutes = require("./routes/websiteRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
+const { syncDatabase } = require("./syncDB");
 
 const app = express();
-
+syncDatabase();
 // ✅ ตรวจสอบและสร้างโฟลเดอร์ `uploads/` อัตโนมัติ
 const uploadDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadDir)) {
@@ -36,7 +38,6 @@ app.use((req, res, next) => {
   
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
-    console.log("origin", origin);
     
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader(
@@ -48,6 +49,8 @@ app.use((req, res, next) => {
       "Content-Type, Authorization"
     );
     res.setHeader("Access-Control-Allow-Credentials", "true"); // ✅ สำคัญ!
+    
+    
   }
 
   if (req.path.startsWith("/auth/")) {
