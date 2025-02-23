@@ -2,6 +2,7 @@ const path = require("path");
 const fs = require("fs");
 const express = require("express");
 const PaymentProof = require("../models/PaymentProof");
+const Subscription = require("../models/Subscription");
 
 // ✅ ตรวจสอบโฟลเดอร์อัปโหลด
 const uploadDir = path.join(__dirname, "../uploads/payment_proofs");
@@ -70,6 +71,56 @@ exports.checkPaymentStatus = async (req, res) => {
       success: false,
       message: "เกิดข้อผิดพลาด กรุณาลองใหม่",
     });
+  }
+};
+
+
+
+exports.approvePayment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const payment = await PaymentProof.findByPk(id);
+
+    if (!payment) {
+      return res.status(404).json({ success: false, message: "ไม่พบหลักฐานการชำระเงิน" });
+    }
+
+    // ✅ อัปเดตสถานะเป็น "approved"
+    payment.status = "approved";
+    await payment.save();
+
+    // ✅ สร้าง Subscription ให้ผู้ใช้
+    await Subscription.create({
+      userId: payment.userId,
+      packageType: payment.packageId,
+      status: "active",
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 วัน
+    });
+
+    res.json({ success: true, message: "✅ อนุมัติแพ็กเกจสำเร็จ!" });
+  } catch (error) {
+    console.error("❌ Error approving payment:", error);
+    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง" });
+  }
+};
+
+exports.rejectPayment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const payment = await PaymentProof.findByPk(id);
+
+    if (!payment) {
+      return res.status(404).json({ success: false, message: "ไม่พบหลักฐานการชำระเงิน" });
+    }
+
+    // ❌ อัปเดตสถานะเป็น "rejected"
+    payment.status = "rejected";
+    await payment.save();
+
+    res.json({ success: true, message: "❌ ปฏิเสธแพ็กเกจสำเร็จ!" });
+  } catch (error) {
+    console.error("❌ Error rejecting payment:", error);
+    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง" });
   }
 };
 
