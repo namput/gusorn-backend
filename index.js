@@ -35,7 +35,6 @@ app.use("/uploads", express.static(uploadDir));
 const allowedOrigins = ["https://www.gusorn.com", "http://localhost:5173"];
 
 app.use((req, res, next) => {
-  const allowedOrigins = ["https://www.gusorn.com", "http://localhost:5173"];
   const origin = req.headers.origin;
 
   // ✅ Public API ที่ต้องอนุญาตทุกที่ (เปิดจากอีเมล)
@@ -54,10 +53,8 @@ app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
     // 🔒 Private API ต้องใช้ Credentials (Token)
-    const privateAuthRoutes = ["/auth/me", "/auth/update-profile", "/auth/update-package", "/auth/logout"];
-    if (privateAuthRoutes.includes(req.path)) {
       res.setHeader("Access-Control-Allow-Credentials", "true");
-    }
+
   } else {
     // ❌ บล็อก Origin ที่ไม่ได้รับอนุญาต
     return res.redirect("https://www.gusorn.com");
