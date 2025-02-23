@@ -108,10 +108,22 @@ exports.approvePayment = async (req, res) => {
     payment.status = "approved";
     await payment.save();
 
+    // ✅ ตรวจสอบให้แน่ใจว่ามี `price` และ `paymentMethod`
+    const packagePrices = {
+      basic: 99,
+      standard: 149,
+      business: 199,
+    };
+
+    const price = packagePrices[payment.packageId] || 0; // ถ้าไม่มี ให้เป็น 0
+    const paymentMethod = payment.paymentMethod || "unknown"; // ถ้าไม่มี ให้ใช้ค่า default
+
     // ✅ สร้าง Subscription ใหม่
     await Subscription.create({
       userId: payment.userId,
       packageType: payment.packageId,
+      price: price, // 🔥 เพิ่ม price ที่จำเป็น
+      paymentMethod: paymentMethod, // 🔥 เพิ่ม paymentMethod ที่จำเป็น
       status: "active",
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 วัน
     });
@@ -122,6 +134,7 @@ exports.approvePayment = async (req, res) => {
     res.status(500).json({ success: false, message: "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง" });
   }
 };
+
 
 // ❌ ปฏิเสธการชำระเงิน
 exports.rejectPayment = async (req, res) => {
