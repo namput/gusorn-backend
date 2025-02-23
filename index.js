@@ -38,7 +38,7 @@ app.use((req, res, next) => {
   const origin = req.headers.origin;
 
   // ✅ Public API ที่ต้องอนุญาตทุกที่ (เปิดจากอีเมล)
-  const globalPublicRoutes = ["/auth/verify-email", "/auth/check-verification"];
+  const globalPublicRoutes = ["/auth/verify-email", "/auth/check-verification","/uploads/payment_proofs"];
 
   // ✅ อนุญาตจากทุก Origin เฉพาะ Global Public API
   if (globalPublicRoutes.includes(req.path)) {

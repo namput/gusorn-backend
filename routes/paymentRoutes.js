@@ -1,4 +1,5 @@
 const express = require("express");
+const path = require("path"); // ✅ Import path ที่หายไป
 const { 
   uploadPaymentProof, 
   checkPaymentStatus, 
@@ -14,20 +15,12 @@ const router = express.Router();
 
 // ✅ API: อัปโหลดหลักฐานการชำระเงินไปที่ `/uploads/payment_proofs`
 router.post("/payment-proof", authenticateUser, upload.single("proof"), uploadPaymentProof);
-
-// ✅ API: ตรวจสอบสถานะการชำระเงิน
 router.get("/payment-status", authenticateUser, checkPaymentStatus);
-
-// ✅ API: ดึงรายการที่รออนุมัติ (เฉพาะ Admin เท่านั้น)
-router.get("/pending-list", authenticateAdmin, getPendingPayments);
-
-// ✅ API: อนุมัติการชำระเงิน (ใช้ PUT)
-router.put("/approve/:id", authenticateAdmin, approvePayment);
-
-// ✅ API: ปฏิเสธการชำระเงิน (ใช้ PUT)
-router.put("/reject/:id", authenticateAdmin, rejectPayment);
-
+router.get("/pending-list", authenticateUser, authenticateAdmin, getPendingPayments);
+router.post("/approve/:id", authenticateUser, authenticateAdmin, approvePayment);
+router.post("/reject/:id", authenticateUser, authenticateAdmin, rejectPayment);
 // ✅ ให้ Express ให้บริการไฟล์อัปโหลดแบบ Static
-router.use("/uploads/payment_proofs", express.static("uploads/payment_proofs"));
+router.use("/uploads/payment_proofs", express.static(path.join(__dirname, "../uploads/payment_proofs")));
+
 
 module.exports = router;
