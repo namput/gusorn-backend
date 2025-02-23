@@ -36,6 +36,7 @@ const allowedOrigins = ["https://www.gusorn.com", "http://localhost:5173"];
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
+  
 
   // ✅ อนุญาตเฉพาะ Origin ที่กำหนดเท่านั้น
   if (allowedOrigins.includes(origin)) {
@@ -48,6 +49,10 @@ app.use((req, res, next) => {
     if (!publicAuthRoutes.includes(req.path)) {
       res.setHeader("Access-Control-Allow-Credentials", "true"); // 🔒 Private API ใช้ Credentials
     }
+  }else if(req.path === "/auth/verify-email"){
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   } else {
     // return res.status(403).json({ message: "❌ ไม่ได้รับอนุญาต" }); // ❌ Block Origin ที่ไม่ได้รับอนุญาต
     return res.redirect("https://www.gusorn.com");
