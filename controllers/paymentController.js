@@ -40,16 +40,15 @@ exports.uploadPaymentProof = async (req, res) => {
   }
 };
 
-
 // ✅ ตรวจสอบสถานะการชำระเงิน
 exports.checkPaymentStatus = async (req, res) => {
   try {
-    const userId = req.user.userId; // 🔐 ดึง ID ผู้ใช้ที่ล็อกอิน
+    const userId = req.user.userId;
 
     // ✅ ดึงข้อมูลล่าสุดของหลักฐานการชำระเงิน
     const payment = await PaymentProof.findOne({
       where: { userId },
-      order: [["createdAt", "DESC"]], // เรียงจากล่าสุด
+      order: [["createdAt", "DESC"]],
     });
 
     if (!payment) {
@@ -61,21 +60,32 @@ exports.checkPaymentStatus = async (req, res) => {
 
     res.json({
       success: true,
-      status: payment.status, // "pending", "approved", "rejected"
-      proofUrl: payment.proofUrl, // URL หลักฐานการชำระเงิน
+      status: payment.status,
+      proofUrl: payment.proofUrl,
     });
 
   } catch (error) {
     console.error("❌ Error checking payment status:", error);
-    res.status(500).json({
-      success: false,
-      message: "เกิดข้อผิดพลาด กรุณาลองใหม่",
+    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาด กรุณาลองใหม่" });
+  }
+};
+
+// ✅ ดึงรายการที่รออนุมัติ
+exports.getPendingPayments = async (req, res) => {
+  try {
+    const pendingPayments = await PaymentProof.findAll({
+      where: { status: "pending" },
     });
+
+    res.json({ success: true, data: pendingPayments });
+  } catch (error) {
+    console.error("❌ Error fetching pending payments:", error);
+    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาดในการโหลดข้อมูล" });
   }
 };
 
 
-
+// ✅ อนุมัติการชำระเงิน & สร้าง Subscription
 exports.approvePayment = async (req, res) => {
   try {
     const { id } = req.params;
@@ -85,11 +95,20 @@ exports.approvePayment = async (req, res) => {
       return res.status(404).json({ success: false, message: "ไม่พบหลักฐานการชำระเงิน" });
     }
 
+    // ✅ ตรวจสอบว่าผู้ใช้มี Subscription อยู่แล้วหรือไม่
+    const existingSubscription = await Subscription.findOne({
+      where: { userId: payment.userId, status: "active" },
+    });
+
+    if (existingSubscription) {
+      return res.status(400).json({ success: false, message: "ผู้ใช้มี Subscription ที่ยังใช้งานได้อยู่แล้ว" });
+    }
+
     // ✅ อัปเดตสถานะเป็น "approved"
     payment.status = "approved";
     await payment.save();
 
-    // ✅ สร้าง Subscription ให้ผู้ใช้
+    // ✅ สร้าง Subscription ใหม่
     await Subscription.create({
       userId: payment.userId,
       packageType: payment.packageId,
@@ -104,6 +123,7 @@ exports.approvePayment = async (req, res) => {
   }
 };
 
+// ❌ ปฏิเสธการชำระเงิน
 exports.rejectPayment = async (req, res) => {
   try {
     const { id } = req.params;
@@ -117,13 +137,12 @@ exports.rejectPayment = async (req, res) => {
     payment.status = "rejected";
     await payment.save();
 
-    res.json({ success: true, message: "❌ ปฏิเสธแพ็กเกจสำเร็จ!" });
+    res.json({ success: true, message: "❌ ปฏิเสธแพ็กเกจสำเร็จ! กรุณาอัปโหลดใหม่" });
   } catch (error) {
     console.error("❌ Error rejecting payment:", error);
     res.status(500).json({ success: false, message: "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง" });
   }
 };
 
-
-// ✅ แก้ไข servePaymentProofs ให้เป็น middleware ที่สามารถใช้กับ router.use()
+// ✅ ให้ Express ให้บริการไฟล์อัปโหลดแบบ Static
 exports.servePaymentProofs = express.static(uploadDir);

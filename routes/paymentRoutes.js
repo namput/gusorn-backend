@@ -1,21 +1,33 @@
 const express = require("express");
-const { uploadPaymentProof, servePaymentProofs, checkPaymentStatus } = require("../controllers/paymentController");
-const { authenticateUser } = require("../middlewares/authMiddleware");
-const { uploadPaymentProof: upload } = require("../middlewares/uploadMiddleware"); // ✅ ใช้ middleware ใหม่
+const { 
+  uploadPaymentProof, 
+  checkPaymentStatus, 
+  approvePayment, 
+  rejectPayment, 
+  getPendingPayments 
+} = require("../controllers/paymentController");
 
-const { approvePayment, rejectPayment, getPendingPayments } = require("../controllers/paymentController");
-const { authenticateAdmin } = require("../middlewares/authMiddleware"); // ✅ ตรวจสอบสิทธิ์ Admin
+const { authenticateUser, authenticateAdmin } = require("../middlewares/authMiddleware");
+const { uploadPaymentProof: upload } = require("../middlewares/uploadMiddleware");
 
 const router = express.Router();
 
 // ✅ API: อัปโหลดหลักฐานการชำระเงินไปที่ `/uploads/payment_proofs`
 router.post("/payment-proof", authenticateUser, upload.single("proof"), uploadPaymentProof);
-router.get("/payment-status", authenticateUser, checkPaymentStatus);
-router.get("/pending-list", authenticateAdmin, getPendingPayments);
-router.post("/approve/:id", authenticateAdmin, approvePayment);
-router.post("/reject/:id", authenticateAdmin, rejectPayment);
 
-// ✅ ให้ Express ให้บริการไฟล์อัปโหลดแบบ Static (servePaymentProofs ถูกต้องแล้ว)
-router.use("/uploads/payment_proofs", servePaymentProofs);
+// ✅ API: ตรวจสอบสถานะการชำระเงิน
+router.get("/payment-status", authenticateUser, checkPaymentStatus);
+
+// ✅ API: ดึงรายการที่รออนุมัติ (เฉพาะ Admin เท่านั้น)
+router.get("/pending-list", authenticateAdmin, getPendingPayments);
+
+// ✅ API: อนุมัติการชำระเงิน (ใช้ PUT)
+router.put("/approve/:id", authenticateAdmin, approvePayment);
+
+// ✅ API: ปฏิเสธการชำระเงิน (ใช้ PUT)
+router.put("/reject/:id", authenticateAdmin, rejectPayment);
+
+// ✅ ให้ Express ให้บริการไฟล์อัปโหลดแบบ Static
+router.use("/uploads/payment_proofs", express.static("uploads/payment_proofs"));
 
 module.exports = router;
