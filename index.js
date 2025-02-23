@@ -35,26 +35,31 @@ app.use("/uploads", express.static(uploadDir));
 const allowedOrigins = ["https://www.gusorn.com", "http://localhost:5173"];
 
 app.use((req, res, next) => {
+  const allowedOrigins = ["https://www.gusorn.com", "http://localhost:5173"];
   const origin = req.headers.origin;
-  
 
-  // ✅ อนุญาตเฉพาะ Origin ที่กำหนดเท่านั้น
-  if (allowedOrigins.includes(origin)) {
+  // ✅ Public API ที่ต้องอนุญาตทุกที่ (เปิดจากอีเมล)
+  const globalPublicRoutes = ["/auth/verify-email", "/auth/check-verification"];
+
+  // ✅ อนุญาตจากทุก Origin เฉพาะ Global Public API
+  if (globalPublicRoutes.includes(req.path)) {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  // ✅ จำกัดเฉพาะ Origin ที่กำหนดสำหรับ API อื่นๆ
+  } else if (allowedOrigins.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-    // ✅ Public API: ไม่ต้องใช้ Credentials (Token)
-    const publicAuthRoutes = ["/auth/login", "/auth/register", "/auth/verify-email", "/auth/check-verification"];
-    if (!publicAuthRoutes.includes(req.path)) {
-      res.setHeader("Access-Control-Allow-Credentials", "true"); // 🔒 Private API ใช้ Credentials
+    // 🔒 Private API ต้องใช้ Credentials (Token)
+    const privateAuthRoutes = ["/auth/me", "/auth/update-profile", "/auth/update-package", "/auth/logout"];
+    if (privateAuthRoutes.includes(req.path)) {
+      res.setHeader("Access-Control-Allow-Credentials", "true");
     }
-  }else if(req.path === "/auth/verify-email"){
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   } else {
-    // return res.status(403).json({ message: "❌ ไม่ได้รับอนุญาต" }); // ❌ Block Origin ที่ไม่ได้รับอนุญาต
+    // ❌ บล็อก Origin ที่ไม่ได้รับอนุญาต
     return res.redirect("https://www.gusorn.com");
   }
 
@@ -64,6 +69,7 @@ app.use((req, res, next) => {
 
   next();
 });
+
 
 
 // ✅ Routes
