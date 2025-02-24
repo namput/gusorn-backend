@@ -78,7 +78,6 @@ exports.login = async (req, res) => {
       order: [["createdAt", "DESC"]],
     });
 
-    console.log("💳 Latest Payment:", payment);
 
     // ✅ ตรวจสอบ Subscription ปัจจุบันของผู้ใช้
     const subscription = await Subscription.findOne({
