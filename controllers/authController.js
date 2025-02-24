@@ -4,6 +4,7 @@ const User = require("../models/User");
 const { sendVerificationEmail } = require("../utils/emailService");
 const TutorProfile = require("../models/TutorProfile");
 const Subscription = require("../models/Subscription");
+const PaymentProof = require("../models/PaymentProof");
 
 exports.register = async (req, res) => {
   try {
@@ -34,7 +35,12 @@ exports.register = async (req, res) => {
 
     await sendVerificationEmail(newUser.email, token);
 
-    res.status(201).json({ message: "สมัครสมาชิกสำเร็จ กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชี", userId: newUser.id });
+    res
+      .status(201)
+      .json({
+        message: "สมัครสมาชิกสำเร็จ กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชี",
+        userId: newUser.id,
+      });
   } catch (error) {
     console.error("เกิดข้อผิดพลาด:", error);
     res.status(500).json({ error: "เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์" });
@@ -45,33 +51,67 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ where: { email } });
-    if (!user) return res.status(401).json({ message: "❌ อีเมลหรือรหัสผ่านไม่ถูกต้อง" });
+    if (!user)
+      return res
+        .status(401)
+        .json({ message: "❌ อีเมลหรือรหัสผ่านไม่ถูกต้อง" });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ message: "❌ อีเมลหรือรหัสผ่านไม่ถูกต้อง" });
+    if (!isMatch)
+      return res
+        .status(401)
+        .json({ message: "❌ อีเมลหรือรหัสผ่านไม่ถูกต้อง" });
 
     if (!user.isVerified) {
-      return res.status(403).json({ message: "❌ บัญชีของคุณยังไม่ได้รับการยืนยัน กรุณาตรวจสอบอีเมล" });
+      return res
+        .status(403)
+        .json({
+          message: "❌ บัญชีของคุณยังไม่ได้รับการยืนยัน กรุณาตรวจสอบอีเมล",
+        });
     }
 
-    const tutorProfile = await TutorProfile.findOne({ where: { userId: user.id } });
+    const tutorProfile = await TutorProfile.findOne({
+      where: { userId: user.id },
+    });
     const hasProfile = !!tutorProfile;
+    // ✅ ตรวจสอบหลักฐานการชำระเงินล่าสุด
+    const payment = await PaymentProof.findOne({
+      where: { userId: user.id },
+      order: [["createdAt", "DESC"]],
+    });
 
-    // ✅ ดึงข้อมูลแพ็กเกจจาก Subscription
-    const subscription = await Subscription.findOne({ where: { userId: user.id, status: "active" } });
-    
-    let redirectPath = "/select-package";
-    if (!subscription) {
-      redirectPath = "/select-package"; // ❌ ไม่มีแพ็กเกจ → ไปเลือกแพ็กเกจ
-    } else if (subscription.status === "pending") {
-      redirectPath = "/pending-status"; // ⏳ รอการตรวจสอบ
-    } else if (subscription.packageType === "basic") {
-      redirectPath = "/create-profile"; // ✅ Basic 99 บาท → ไปสร้างโปรไฟล์
-    } else {
-      redirectPath = "/dashboard"; // ✅ Standard ขึ้นไป → ไปแดชบอร์ด
+    // ✅ ตรวจสอบ Subscription ปัจจุบันของผู้ใช้
+    const subscription = await Subscription.findOne({
+      where: { userId: user.id, status: "active" },
+      order: [["createdAt", "DESC"]],
+    });
+
+    // 🎯 **กำหนด `redirectPath` ตามเงื่อนไขที่กำหนด**
+    let redirectPath = "/select-package"; // ค่าเริ่มต้น
+
+    if (!payment || payment.status === "rejected") {
+      redirectPath = "/select-package"; // ❌ ไม่มีรายการ หรือ ถูกปฏิเสธ
+    } else if (payment.status === "pending") {
+      redirectPath = "/pending-status"; // ⏳ รอตรวจสอบ
+    } else if (payment.status === "approved") {
+      if (!subscription) {
+        redirectPath = "/select-package"; // ❌ ไม่มี Subscription
+      } else if (new Date(subscription.expiresAt) <= new Date()) {
+        redirectPath = "/select-package"; // ❌ Subscription หมดอายุ
+      } else if (subscription.status === "pending") {
+        redirectPath = "/pending-status"; // ⏳ Subscription รอตรวจสอบ
+      } else if (subscription.packageType === "basic") {
+        redirectPath = "/create-profile"; // ✅ แพ็กเกจ Basic → ไปสร้างโปรไฟล์
+      } else {
+        redirectPath = "/dashboard"; // ✅ แพ็กเกจอื่น → ไปแดชบอร์ด
+      }
     }
 
-    const token = jwt.sign({ userId: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: "7d" });
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
 
     res.status(200).json({
       message: "✅ เข้าสู่ระบบสำเร็จ",
@@ -86,14 +126,11 @@ exports.login = async (req, res) => {
       packageStatus: subscription?.status || "none",
       redirectPath,
     });
-
   } catch (error) {
     console.error("❌ เกิดข้อผิดพลาด:", error);
     res.status(500).json({ error: "❌ เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์" });
   }
 };
-
-
 
 exports.sendVerificationEmail = async (req, res) => {
   try {
@@ -140,13 +177,13 @@ exports.verifyEmail = async (req, res) => {
     }
 
     if (user.isVerified) {
-      return res.redirect("https://www.gusorn.com"); 
+      return res.redirect("https://www.gusorn.com");
     }
 
     user.isVerified = true;
     await user.save();
 
-    return res.redirect("https://www.gusorn.com"); 
+    return res.redirect("https://www.gusorn.com");
   } catch (error) {
     console.error("เกิดข้อผิดพลาด:", error);
     res.status(400).json({ message: "Token ไม่ถูกต้องหรือหมดอายุ" });
@@ -164,14 +201,18 @@ exports.checkVerification = async (req, res) => {
     const user = await User.findOne({ where: { email } });
 
     if (!user) {
-      return res.status(404).json({ message: "ไม่พบอีเมลนี้ในระบบ", verified: false });
+      return res
+        .status(404)
+        .json({ message: "ไม่พบอีเมลนี้ในระบบ", verified: false });
     }
 
     // ส่งสถานะการยืนยันอีเมลกลับไป
     return res.json({ verified: user.isVerified });
   } catch (error) {
     console.error("เกิดข้อผิดพลาด:", error);
-    return res.status(500).json({ message: "เกิดข้อผิดพลาดในเซิร์ฟเวอร์", verified: false });
+    return res
+      .status(500)
+      .json({ message: "เกิดข้อผิดพลาดในเซิร์ฟเวอร์", verified: false });
   }
 };
 
@@ -201,7 +242,12 @@ exports.subscribePackage = async (req, res) => {
       endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)), // หมดอายุใน 1 เดือน
     });
 
-    res.status(201).json({ message: "✅ สมัครแพ็กเกจสำเร็จ!", subscription: newSubscription });
+    res
+      .status(201)
+      .json({
+        message: "✅ สมัครแพ็กเกจสำเร็จ!",
+        subscription: newSubscription,
+      });
   } catch (error) {
     console.error("❌ เกิดข้อผิดพลาด:", error);
     res.status(500).json({ error: "❌ เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์" });
