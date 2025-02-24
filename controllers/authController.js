@@ -96,7 +96,7 @@ exports.login = async (req, res) => {
     } else if (payment.status === "approved") {
       if (!subscription) {
         redirectPath = "/select-package"; // ❌ ไม่มี Subscription
-      } else if (new Date(subscription.expiresAt) <= new Date()) {
+      } else if (new Date(subscription.expiresAt) < new Date()) {
         redirectPath = "/select-package"; // ❌ Subscription หมดอายุ
       } else if (subscription.status === "pending") {
         redirectPath = "/pending-status"; // ⏳ Subscription รอตรวจสอบ

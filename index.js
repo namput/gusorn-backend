@@ -16,7 +16,7 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const { syncDatabase } = require("./syncDB");
 
 const app = express();
-// syncDatabase();
+syncDatabase();
 
 // ✅ ตรวจสอบและสร้างโฟลเดอร์ `uploads/`
 const uploadDir = path.join(__dirname, "uploads");

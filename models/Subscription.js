@@ -19,6 +19,10 @@ const Subscription = sequelize.define(
       },
       onDelete: "CASCADE",
     },
+    paymentId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
     packageType: {
       type: DataTypes.ENUM("basic", "standard", "premium", "business"),
       allowNull: false,

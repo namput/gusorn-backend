@@ -88,52 +88,59 @@ exports.getPendingPayments = async (req, res) => {
 // ✅ อนุมัติการชำระเงิน & สร้าง Subscription
 exports.approvePayment = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params; // ✅ อ้างอิงหมายเลขรายการชำระเงิน
     const payment = await PaymentProof.findByPk(id);
 
     if (!payment) {
-      return res.status(404).json({ success: false, message: "ไม่พบหลักฐานการชำระเงิน" });
+      return res.status(404).json({ success: false, message: "❌ ไม่พบหลักฐานการชำระเงิน" });
     }
 
-    // ✅ ตรวจสอบว่าผู้ใช้มี Subscription อยู่แล้วหรือไม่
+    // ✅ ตรวจสอบว่าผู้ใช้มี Subscription ที่ใช้งานอยู่หรือไม่
     const existingSubscription = await Subscription.findOne({
       where: { userId: payment.userId, status: "active" },
     });
 
     if (existingSubscription) {
-      return res.status(400).json({ success: false, message: "ผู้ใช้มี Subscription ที่ยังใช้งานได้อยู่แล้ว" });
+      return res.status(400).json({ success: false, message: "❌ ผู้ใช้มี Subscription ที่ยังใช้งานได้อยู่แล้ว" });
     }
 
-    // ✅ อัปเดตสถานะเป็น "approved"
+    // ✅ อัปเดตสถานะการชำระเงินเป็น "approved"
     payment.status = "approved";
     await payment.save();
 
     // ✅ ตรวจสอบให้แน่ใจว่ามี `price` และ `paymentMethod`
     const packagePrices = {
       basic: 99,
-      standard: 149,
-      business: 199,
+      standard: 199,
+      premium: 299,
+      business: 399,
     };
 
-    const price = packagePrices[payment.packageId] || 0; // ถ้าไม่มี ให้เป็น 0
-    const paymentMethod = payment.paymentMethod || "unknown"; // ถ้าไม่มี ให้ใช้ค่า default
+    const price = packagePrices[payment.packageId] || 0; // ❗ ถ้าไม่มี ให้เป็น 0
+    const paymentMethod = payment.paymentMethod || "unknown"; // ❗ ถ้าไม่มี ให้ใช้ค่า "unknown"
 
     // ✅ สร้าง Subscription ใหม่
-    await Subscription.create({
+    const newSubscription = await Subscription.create({
       userId: payment.userId,
       packageType: payment.packageId,
-      price: price, // 🔥 เพิ่ม price ที่จำเป็น
-      paymentMethod: paymentMethod, // 🔥 เพิ่ม paymentMethod ที่จำเป็น
+      price: price, // 💰 กำหนดราคาแพ็กเกจ
+      paymentMethod: paymentMethod, // 💳 วิธีการชำระเงิน (QR, Credit Card ฯลฯ)
+      startDate:new Date(Date.now()),
       status: "active",
-      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 วัน
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // ⏳ 30 วันนับจากวันที่สมัคร
+      paymentId: payment.id, // 🔗 อ้างอิงถึงหมายเลขรายการชำระเงิน
     });
 
+    console.log("✅ Subscription Created:", newSubscription);
+
     res.json({ success: true, message: "✅ อนุมัติแพ็กเกจสำเร็จ!" });
+
   } catch (error) {
     console.error("❌ Error approving payment:", error);
-    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง" });
+    res.status(500).json({ success: false, message: "❌ เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง" });
   }
 };
+
 
 
 // ❌ ปฏิเสธการชำระเงิน
