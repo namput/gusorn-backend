@@ -5,6 +5,7 @@ const { sendVerificationEmail } = require("../utils/emailService");
 const TutorProfile = require("../models/TutorProfile");
 const Subscription = require("../models/Subscription");
 const PaymentProof = require("../models/PaymentProof");
+const sequelize = require("../config/database"); // เชื่อมต่อฐานข้อมูล
 
 exports.register = async (req, res) => {
   try {
@@ -49,42 +50,43 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
   try {
+    await sequelize.authenticate(); // ✅ ตรวจสอบการเชื่อมต่อฐานข้อมูล
+    console.log("✅ Database connection is active");
+
     const { email, password } = req.body;
     const user = await User.findOne({ where: { email } });
-    if (!user)
-      return res
-        .status(401)
-        .json({ message: "❌ อีเมลหรือรหัสผ่านไม่ถูกต้อง" });
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
-      return res
-        .status(401)
-        .json({ message: "❌ อีเมลหรือรหัสผ่านไม่ถูกต้อง" });
-
-    if (!user.isVerified) {
-      return res
-        .status(403)
-        .json({
-          message: "❌ บัญชีของคุณยังไม่ได้รับการยืนยัน กรุณาตรวจสอบอีเมล",
-        });
+    if (!user) {
+      return res.status(401).json({ message: "❌ อีเมลหรือรหัสผ่านไม่ถูกต้อง" });
     }
 
-    const tutorProfile = await TutorProfile.findOne({
-      where: { userId: user.id },
-    });
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "❌ อีเมลหรือรหัสผ่านไม่ถูกต้อง" });
+    }
+
+    if (!user.isVerified) {
+      return res.status(403).json({ message: "❌ บัญชีของคุณยังไม่ได้รับการยืนยัน กรุณาตรวจสอบอีเมล" });
+    }
+
+    const tutorProfile = await TutorProfile.findOne({ where: { userId: user.id } });
     const hasProfile = !!tutorProfile;
+
     // ✅ ตรวจสอบหลักฐานการชำระเงินล่าสุด
     const payment = await PaymentProof.findOne({
       where: { userId: user.id },
       order: [["createdAt", "DESC"]],
     });
 
+    console.log("💳 Latest Payment:", payment);
+
     // ✅ ตรวจสอบ Subscription ปัจจุบันของผู้ใช้
     const subscription = await Subscription.findOne({
-      where: { userId: user.id, status: "active" },
+      where: { userId: user.id, status: "active", paymentId: payment?.id || null },
       order: [["createdAt", "DESC"]],
     });
+
+    console.log("📦 Active Subscription:", subscription);
 
     // 🎯 **กำหนด `redirectPath` ตามเงื่อนไขที่กำหนด**
     let redirectPath = "/select-package"; // ค่าเริ่มต้น
@@ -96,7 +98,7 @@ exports.login = async (req, res) => {
     } else if (payment.status === "approved") {
       if (!subscription) {
         redirectPath = "/select-package"; // ❌ ไม่มี Subscription
-      } else if (new Date(subscription.expiresAt) < new Date()) {
+      } else if (subscription.expiresAt && new Date(subscription.expiresAt) < new Date()) {
         redirectPath = "/select-package"; // ❌ Subscription หมดอายุ
       } else if (subscription.status === "pending") {
         redirectPath = "/pending-status"; // ⏳ Subscription รอตรวจสอบ

@@ -9,9 +9,6 @@ const INTRO_VIDEOS_DIR = `${UPLOADS_DIR}/intro_videos`;
 
 exports.createProfile = async (req, res) => {
   try {
-    console.log("🔍 Request Body:", req.body);
-    console.log("📂 Uploaded Files:", req.files);
-    console.log("🔐 Authenticated User:", req.user);
 
     // ✅ ตรวจสอบว่า `userId` ถูกต้อง
     const userId = req.user?.userId;

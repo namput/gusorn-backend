@@ -14,7 +14,9 @@ if (!fs.existsSync(uploadDir)) {
 exports.uploadPaymentProof = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ success: false, message: "❌ กรุณาอัปโหลดไฟล์" });
+      return res
+        .status(400)
+        .json({ success: false, message: "❌ กรุณาอัปโหลดไฟล์" });
     }
 
     const { packageId, paymentMethod } = req.body;
@@ -36,7 +38,9 @@ exports.uploadPaymentProof = async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Error uploading payment proof:", error);
-    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง" });
+    res
+      .status(500)
+      .json({ success: false, message: "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง" });
   }
 };
 
@@ -63,10 +67,11 @@ exports.checkPaymentStatus = async (req, res) => {
       status: payment.status,
       proofUrl: payment.proofUrl,
     });
-
   } catch (error) {
     console.error("❌ Error checking payment status:", error);
-    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาด กรุณาลองใหม่" });
+    res
+      .status(500)
+      .json({ success: false, message: "เกิดข้อผิดพลาด กรุณาลองใหม่" });
   }
 };
 
@@ -80,10 +85,11 @@ exports.getPendingPayments = async (req, res) => {
     res.json({ success: true, data: pendingPayments });
   } catch (error) {
     console.error("❌ Error fetching pending payments:", error);
-    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาดในการโหลดข้อมูล" });
+    res
+      .status(500)
+      .json({ success: false, message: "เกิดข้อผิดพลาดในการโหลดข้อมูล" });
   }
 };
-
 
 // ✅ อนุมัติการชำระเงิน & สร้าง Subscription
 exports.approvePayment = async (req, res) => {
@@ -92,7 +98,9 @@ exports.approvePayment = async (req, res) => {
     const payment = await PaymentProof.findByPk(id);
 
     if (!payment) {
-      return res.status(404).json({ success: false, message: "❌ ไม่พบหลักฐานการชำระเงิน" });
+      return res
+        .status(404)
+        .json({ success: false, message: "❌ ไม่พบหลักฐานการชำระเงิน" });
     }
 
     // ✅ ตรวจสอบว่าผู้ใช้มี Subscription ที่ใช้งานอยู่หรือไม่
@@ -101,7 +109,12 @@ exports.approvePayment = async (req, res) => {
     });
 
     if (existingSubscription) {
-      return res.status(400).json({ success: false, message: "❌ ผู้ใช้มี Subscription ที่ยังใช้งานได้อยู่แล้ว" });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "❌ ผู้ใช้มี Subscription ที่ยังใช้งานได้อยู่แล้ว",
+        });
     }
 
     // ✅ อัปเดตสถานะการชำระเงินเป็น "approved"
@@ -120,28 +133,28 @@ exports.approvePayment = async (req, res) => {
     const paymentMethod = payment.paymentMethod || "unknown"; // ❗ ถ้าไม่มี ให้ใช้ค่า "unknown"
 
     // ✅ สร้าง Subscription ใหม่
-    const newSubscription = await Subscription.create({
+    await Subscription.create({
       userId: payment.userId,
       packageType: payment.packageId,
       price: price, // 💰 กำหนดราคาแพ็กเกจ
       paymentMethod: paymentMethod, // 💳 วิธีการชำระเงิน (QR, Credit Card ฯลฯ)
-      startDate:new Date(Date.now()),
+      startDate: new Date(Date.now()),
       status: "active",
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // ⏳ 30 วันนับจากวันที่สมัคร
       paymentId: payment.id, // 🔗 อ้างอิงถึงหมายเลขรายการชำระเงิน
     });
 
-    console.log("✅ Subscription Created:", newSubscription);
-
     res.json({ success: true, message: "✅ อนุมัติแพ็กเกจสำเร็จ!" });
-
   } catch (error) {
     console.error("❌ Error approving payment:", error);
-    res.status(500).json({ success: false, message: "❌ เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง" });
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "❌ เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง",
+      });
   }
 };
-
-
 
 // ❌ ปฏิเสธการชำระเงิน
 exports.rejectPayment = async (req, res) => {
@@ -150,17 +163,24 @@ exports.rejectPayment = async (req, res) => {
     const payment = await PaymentProof.findByPk(id);
 
     if (!payment) {
-      return res.status(404).json({ success: false, message: "ไม่พบหลักฐานการชำระเงิน" });
+      return res
+        .status(404)
+        .json({ success: false, message: "ไม่พบหลักฐานการชำระเงิน" });
     }
 
     // ❌ อัปเดตสถานะเป็น "rejected"
     payment.status = "rejected";
     await payment.save();
 
-    res.json({ success: true, message: "❌ ปฏิเสธแพ็กเกจสำเร็จ! กรุณาอัปโหลดใหม่" });
+    res.json({
+      success: true,
+      message: "❌ ปฏิเสธแพ็กเกจสำเร็จ! กรุณาอัปโหลดใหม่",
+    });
   } catch (error) {
     console.error("❌ Error rejecting payment:", error);
-    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง" });
+    res
+      .status(500)
+      .json({ success: false, message: "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง" });
   }
 };
 

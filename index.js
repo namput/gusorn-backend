@@ -13,10 +13,10 @@ const tutorRoutes = require("./routes/tutorRoutes");
 const subscriptionRoutes = require("./routes/subscriptionRoutes");
 const websiteRoutes = require("./routes/websiteRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
-const { syncDatabase } = require("./syncDB");
+
 
 const app = express();
-// syncDatabase();
+
 
 // ✅ ตรวจสอบและสร้างโฟลเดอร์ `uploads/`
 const uploadDir = path.join(__dirname, "uploads");
