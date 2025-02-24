@@ -15,7 +15,6 @@ exports.authenticateUser = (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded; // 🔥 เพิ่มข้อมูลผู้ใช้ลงใน req.user
 
-    console.log("🔑 Authenticated User:", req.user);
     next(); // ไปยัง Middleware หรือ Controller ถัดไป
   } catch (error) {
     return res.status(403).json({ message: "❌ Token ไม่ถูกต้อง" });

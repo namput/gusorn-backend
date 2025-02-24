@@ -17,5 +17,5 @@ async function syncDatabase() {
     // process.exit(); // ✅ ออกจากโปรแกรมหลังจากซิงค์เสร็จ
   }
 }
-
-exports.syncDatabase = syncDatabase;
+syncDatabase();
+// exports.syncDatabase = syncDatabase;
