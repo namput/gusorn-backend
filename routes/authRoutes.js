@@ -1,11 +1,7 @@
 const express = require("express");
-const {
-  register,
-  login,
-  checkVerification,
-  sendVerificationEmail,
-  verifyEmail,
-} = require("../controllers/authController");
+const { register, login, verifyEmail, checkVerification } = require("../controllers/authController");
+const { sendVerificationEmail } = require("../utils/emailService");
+
 const router = express.Router();
 
 router.post("/register", register);
