@@ -63,8 +63,8 @@ exports.addReply = async (req, res) => {
         include: [
           {
             model: Reply,
-            as: "Replies",
-            include: [{ model: User, as: "User", attributes: ["id", "username"] }],
+            as: "replies",
+            include: [{ model: User, as: "user", attributes: ["id", "username"] }],
             separate: true, // ✅ ใช้ `separate: true` เพื่อให้ `order` มีผล
             order: [["createdAt", "ASC"]], // ✅ แก้ให้ทำงานได้
           },
