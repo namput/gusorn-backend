@@ -6,15 +6,15 @@ const TutorProfile = sequelize.define(
   "TutorProfile",
   {
     id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER.UNSIGNED, // ✅ ใช้ UNSIGNED เพื่อให้ตรงกับ users.id
       autoIncrement: true,
       primaryKey: true,
     },
     userId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER.UNSIGNED, // ✅ ตรงกับ users.id
       allowNull: false,
       references: {
-        model: "users",
+        model: User, // ✅ ใช้ model เป็น User แทน "users"
         key: "id",
       },
       onDelete: "CASCADE",
@@ -24,18 +24,18 @@ const TutorProfile = sequelize.define(
       type: DataTypes.STRING(255),
       allowNull: false,
     },
-    email: { // ✅ เพิ่ม email
+    email: {
       type: DataTypes.STRING(255),
       allowNull: false,
       validate: {
-        isEmail: true, // ✅ ตรวจสอบว่าเป็นอีเมลที่ถูกต้อง
+        isEmail: true,
       },
     },
     profileImage: {
       type: DataTypes.STRING(255),
       allowNull: true,
     },
-    introVideo: { // ✅ เพิ่ม introVideo
+    introVideo: {
       type: DataTypes.STRING(255),
       allowNull: true,
     },
@@ -81,7 +81,7 @@ const TutorProfile = sequelize.define(
         this.setDataValue("teachingMethods", JSON.stringify(value));
       },
     },
-    ageGroups: { // ✅ เพิ่ม ageGroups
+    ageGroups: {
       type: DataTypes.TEXT,
       allowNull: true,
       get() {
@@ -126,6 +126,7 @@ const TutorProfile = sequelize.define(
   }
 );
 
+// ✅ ตั้งค่า Relationship ให้ถูกต้อง
 User.hasOne(TutorProfile, {
   foreignKey: "userId",
   onDelete: "CASCADE",

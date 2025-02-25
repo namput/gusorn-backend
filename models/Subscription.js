@@ -6,21 +6,22 @@ const Subscription = sequelize.define(
   "Subscription",
   {
     id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER.UNSIGNED, // ✅ ใช้ UNSIGNED เพื่อให้ตรงกับ User.id
       autoIncrement: true,
       primaryKey: true,
     },
     userId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER.UNSIGNED, // ✅ ต้องใช้ UNSIGNED ให้ตรงกัน
       allowNull: false,
       references: {
-        model: User,
+        model: "users", // ✅ เปลี่ยนจาก `User` เป็น `users` ให้ตรงกับ tableName ของ `User`
         key: "id",
       },
       onDelete: "CASCADE",
+      onUpdate: "CASCADE",
     },
     paymentId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
     },
     packageType: {
@@ -28,12 +29,12 @@ const Subscription = sequelize.define(
       allowNull: false,
     },
     price: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
     },
     status: {
       type: DataTypes.ENUM("pending", "active", "expired"),
-      defaultValue: "pending", // ✅ เริ่มต้นเป็น pending
+      defaultValue: "pending",
     },
     paymentMethod: {
       type: DataTypes.ENUM("qr", "bank"),
@@ -53,5 +54,9 @@ const Subscription = sequelize.define(
     timestamps: true,
   }
 );
+
+// ✅ กำหนดความสัมพันธ์
+User.hasMany(Subscription, { foreignKey: "userId", onDelete: "CASCADE", onUpdate: "CASCADE" });
+Subscription.belongsTo(User, { foreignKey: "userId" });
 
 module.exports = Subscription;

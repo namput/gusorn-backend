@@ -1,13 +1,17 @@
 const Thread = require("./Thread");
 const Reply = require("./Reply");
-const User = require("./User"); // ✅ เพิ่ม User
+const User = require("./User");
 
 // ✅ กำหนดความสัมพันธ์ของ Thread และ Reply
-Thread.hasMany(Reply, { foreignKey: "thread_id", as: "Replies", onDelete: "CASCADE" });
-Reply.belongsTo(Thread, { foreignKey: "thread_id", as: "Thread" });
+Thread.hasMany(Reply, { foreignKey: "thread_id", as: "replies", onDelete: "CASCADE" });
+Reply.belongsTo(Thread, { foreignKey: "thread_id", as: "thread" });
 
 // ✅ กำหนดความสัมพันธ์ของ User และ Reply
-User.hasMany(Reply, { foreignKey: "user_id", as: "Replies", onDelete: "CASCADE" });
-Reply.belongsTo(User, { foreignKey: "user_id", as: "User" }); // ✅ เพิ่มตรงนี้
+User.hasMany(Reply, { foreignKey: "user_id", as: "userReplies", onDelete: "CASCADE" });
+Reply.belongsTo(User, { foreignKey: "user_id", as: "user" });
 
-module.exports = { Thread, Reply, User }; // ✅ ส่งออก User ด้วย
+// ✅ กำหนดความสัมพันธ์ของ User และ Thread
+User.hasMany(Thread, { foreignKey: "user_id", as: "threads", onDelete: "CASCADE" });
+Thread.belongsTo(User, { foreignKey: "user_id", as: "user" });
+
+module.exports = { Thread, Reply, User };
