@@ -28,7 +28,7 @@ app.use(morgan("dev"));
 app.use(express.json({ limit: "1030mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1030mb" }));
 app.use("/uploads", express.static(uploadDir));
-const allowedOrigins = ["https://www.gusorn.com", "http://localhost:5173"];
+const allowedOrigins = ["https://www.gusorn.com", "http://localhost:5173", "https://apigusorn.neuatech.com"];
 
 app.use((req, res, next) => {
   const origin = req.headers.origin || "";
