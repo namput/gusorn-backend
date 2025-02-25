@@ -9,25 +9,33 @@ const sequelize = require("../config/database"); // เชื่อมต่อ�
 
 exports.register = async (req, res) => {
   try {
-    const { email, password, role } = req.body;
+    const { name, username, email, password, role } = req.body; // ✅ เพิ่ม name
 
-    // ตรวจสอบว่ามีบัญชีอยู่แล้วหรือไม่
+    // ✅ ตรวจสอบว่าชื่อผู้ใช้ซ้ำหรือไม่
+    const existingUsername = await User.findOne({ where: { username } });
+    if (existingUsername) {
+      return res.status(400).json({ message: "ชื่อผู้ใช้นี้ถูกใช้ไปแล้ว" });
+    }
+
+    // ✅ ตรวจสอบว่าอีเมลซ้ำหรือไม่
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ message: "อีเมลนี้ถูกใช้ไปแล้ว" });
     }
 
-    // เข้ารหัสรหัสผ่าน
+    // ✅ เข้ารหัสรหัสผ่าน
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // สร้างผู้ใช้ใหม่
+    // ✅ สร้างผู้ใช้ใหม่
     const newUser = await User.create({
+      name, // ✅ เพิ่ม name
+      username,
       email,
       password: hashedPassword,
       role: role || "tutor", // ค่า default เป็น tutor
     });
 
-    // ส่งอีเมลยืนยัน
+    // ✅ ส่งอีเมลยืนยัน
     const token = jwt.sign(
       { userId: newUser.id, email: newUser.email },
       process.env.JWT_EMAIL_SECRET,
@@ -36,17 +44,17 @@ exports.register = async (req, res) => {
 
     await sendVerificationEmail(newUser.email, token);
 
-    res
-      .status(201)
-      .json({
-        message: "สมัครสมาชิกสำเร็จ กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชี",
-        userId: newUser.id,
-      });
+    res.status(201).json({
+      message: "สมัครสมาชิกสำเร็จ กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชี",
+      userId: newUser.id,
+    });
   } catch (error) {
     console.error("เกิดข้อผิดพลาด:", error);
     res.status(500).json({ error: "เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์" });
   }
 };
+
+
 
 exports.login = async (req, res) => {
   try {

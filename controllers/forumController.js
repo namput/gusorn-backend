@@ -1,4 +1,5 @@
 const { Thread, Reply } = require("../models");
+const User = require("../models/User");
 
 
 // ✅ ดึงกระทู้ทั้งหมด
@@ -61,10 +62,17 @@ exports.addReply = async (req, res) => {
         include: [
           {
             model: Reply,
-            as: "Replies", // ✅ ต้องใช้ `as` ให้ตรงกับ `models/index.js`
-            order: [["created_at", "ASC"]], // ✅ ให้เรียงลำดับตามวันที่
+            as: "Replies",
+            include: [
+              {
+                model: User,
+                as: "User",
+                attributes: ["id", "username"], // ✅ ดึงแค่ ID และชื่อผู้ใช้
+              },
+            ],
           },
         ],
+        order: [[{ model: Reply, as: "Replies" }, "created_at", "ASC"]],
       });
   
       if (!thread) {
@@ -77,4 +85,6 @@ exports.addReply = async (req, res) => {
       res.status(500).json({ message: "ไม่สามารถโหลดข้อมูลได้" });
     }
   };
+  
+  
   
