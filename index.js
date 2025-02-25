@@ -47,10 +47,10 @@ app.use((req, res, next) => {
   ];
 
   // ✅ API ที่ต้องใช้ `allowedOrigins` แต่ไม่ต้องใช้ Token (Login/Register)
-  const authRoutes = ["/auth/login", "/auth/register"];
+  const authRoutes = ["/auth/login"];
 
   // ✅ API ที่ต้องใช้ `allowedOrigins` และต้องมี Token (`Authorization`)
-  const restrictedRoutes = ["/forum/threads"];
+  const restrictedRoutes = ["/forum/threads","/forum/replies"];
 
   // ✅ Public API ใช้ `*` แต่ต้องไม่มี `credentials: "include"`
   if (globalPublicRoutes.some(route => req.path.startsWith(route))) {
@@ -101,56 +101,6 @@ app.use((req, res, next) => {
 
   next();
 });
-
-
-// const allowedOrigins = ["https://www.gusorn.com", "http://localhost:5173"];
-
-// app.use((req, res, next) => {
-//   const origin = req.headers.origin;
-
-//   // ✅ Public API ที่ต้องอนุญาตทุกที่ (เปิดจากอีเมล)
-//   const globalPublicRoutes = [
-//     "/auth/verify-email",
-//     "/auth/check-verification",
-//     "/uploads/payment_proofs",
-//     "/forum/threads", // ✅ อนุญาตให้เข้าถึงกระทู้ทั้งหมด
-//     "/forum/threads/", // ✅ รองรับ Dynamic Path (ดึงกระทู้ตาม ID)
-//   ];
-
-//   // ✅ อนุญาตจากทุก Origin เฉพาะ Global Public API
-//   if (globalPublicRoutes.includes(req.path)) {
-//     res.setHeader("Access-Control-Allow-Origin", "*");
-//     res.setHeader("Access-Control-Allow-Methods", "GET, POST");
-//     res.setHeader(
-//       "Access-Control-Allow-Headers",
-//       "Content-Type, Authorization"
-//     );
-
-//     // ✅ จำกัดเฉพาะ Origin ที่กำหนดสำหรับ API อื่นๆ
-//   } else if (allowedOrigins.includes(origin)) {
-//     res.setHeader("Access-Control-Allow-Origin", origin);
-//     res.setHeader(
-//       "Access-Control-Allow-Methods",
-//       "GET, POST, PUT, DELETE, OPTIONS"
-//     );
-//     res.setHeader(
-//       "Access-Control-Allow-Headers",
-//       "Content-Type, Authorization"
-//     );
-
-//     // 🔒 Private API ต้องใช้ Credentials (Token)
-//     res.setHeader("Access-Control-Allow-Credentials", "true");
-//   } else {
-//     // ❌ บล็อก Origin ที่ไม่ได้รับอนุญาต
-//     return res.redirect("https://www.gusorn.com");
-//   }
-
-//   if (req.method === "OPTIONS") {
-//     return res.sendStatus(204);
-//   }
-
-//   next();
-// });
 
 // ✅ Routes
 app.use("/users", userRoutes);

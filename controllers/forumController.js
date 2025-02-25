@@ -39,7 +39,8 @@ exports.createThread = async (req, res) => {
 exports.addReply = async (req, res) => {
     try {
       const { thread_id, content } = req.body;
-      const user_id = req.user?.id; // ✅ ดึง ID ของผู้ใช้จาก Token
+      const user_id = req.user?.userId; // ✅ ดึง ID ของผู้ใช้จาก Token
+  console.log("🔥 user_id:", user_id);
   
       if (!user_id) {
         return res.status(401).json({ message: "Unauthorized: กรุณาเข้าสู่ระบบ" });
@@ -63,16 +64,11 @@ exports.addReply = async (req, res) => {
           {
             model: Reply,
             as: "Replies",
-            include: [
-              {
-                model: User,
-                as: "User",
-                attributes: ["id", "username"], // ✅ ดึงแค่ ID และชื่อผู้ใช้
-              },
-            ],
+            include: [{ model: User, as: "User", attributes: ["id", "username"] }],
+            separate: true, // ✅ ใช้ `separate: true` เพื่อให้ `order` มีผล
+            order: [["createdAt", "ASC"]], // ✅ แก้ให้ทำงานได้
           },
         ],
-        order: [[{ model: Reply, as: "Replies" }, "created_at", "ASC"]],
       });
   
       if (!thread) {
@@ -81,10 +77,11 @@ exports.addReply = async (req, res) => {
   
       res.json(thread);
     } catch (error) {
-      console.error("Error fetching thread:", error);
-      res.status(500).json({ message: "ไม่สามารถโหลดข้อมูลได้" });
+      console.error("❌ Error fetching thread:", error);
+      res.status(500).json({ message: "❌ ไม่สามารถโหลดข้อมูลได้" });
     }
   };
+  
   
   
   
