@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const TutorProfile = require("../models/TutorProfile");
+const { User } = require("../models");
 
 // ✅ ตั้งค่าพาธอัปโหลดให้ตรงกับ `uploadMiddleware.js`
 const UPLOADS_DIR = "/uploads";
@@ -88,5 +89,30 @@ exports.createProfile = async (req, res) => {
   } catch (error) {
     console.error("❌ Error:", error);
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+exports.getTutorProfile = async (req, res) => {
+  try {
+    const userId = req.user.userId; // ✅ ดึง ID ของผู้ใช้ที่ล็อกอินอยู่
+
+    // ✅ ค้นหาโปรไฟล์ของติวเตอร์
+    const tutorProfile = await TutorProfile.findOne({
+      where: { userId },
+      include: [
+        {
+          model: User,
+          attributes: ["id", "email", "username"], // ✅ ดึงข้อมูลพื้นฐานจาก User
+        },
+      ],
+    });
+
+    if (!tutorProfile) {
+      return res.status(404).json({ success: false, message: "ไม่พบโปรไฟล์ติวเตอร์" });
+    }
+
+    res.status(200).json({ success: true, data: tutorProfile });
+  } catch (error) {
+    console.error("❌ เกิดข้อผิดพลาดในการโหลดโปรไฟล์:", error);
+    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์" });
   }
 };
