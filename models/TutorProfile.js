@@ -47,6 +47,10 @@ const TutorProfile = sequelize.define(
       type: DataTypes.STRING(255),
       allowNull: true,
     },
+    subdomain: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
     bio: {
       type: DataTypes.TEXT,
       allowNull: true,

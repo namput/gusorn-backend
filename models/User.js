@@ -27,9 +27,8 @@ const User = sequelize.define(
       },
     },
     phone: {
-      type: DataTypes.STRING(15), // ✅ เพิ่มหมายเลขโทรศัพท์
+      type: DataTypes.STRING(15), // ✅ ใช้ STRING (เพราะบางเบอร์อาจมีเครื่องหมาย +)
       allowNull: false,
-      unique: true, // ✅ ป้องกันเบอร์โทรซ้ำ
       validate: {
         isNumeric: true, // ✅ ต้องเป็นตัวเลขเท่านั้น
         len: [10, 15], // ✅ จำกัดให้เบอร์โทรศัพท์มี 10-15 หลัก
@@ -50,8 +49,14 @@ const User = sequelize.define(
     },
   },
   {
-    tableName: "users", // ✅ กำหนด tableName ให้ตรงกับที่ใช้อ้างอิงใน Subscription
+    tableName: "users",
     timestamps: true,
+    indexes: [
+      {
+        unique: true,
+        fields: ["phone"],
+      },
+    ],
   }
 );
 
