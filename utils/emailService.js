@@ -200,7 +200,7 @@ exports.sendApprovalNotificationEmail = async ( user, packageDetails) => {
 exports.sendRejectionNotificationEmail = async ( user, packageDetails) => {
   const currentYear = new Date().getFullYear();
   const supportEmail = process.env.SUPPORT_EMAIL || "support@gusorn.com";
-  const reapplyLink = `${process.env.PACKAGE_PAGE_URL}`; // ลิงก์ไปหน้าสมัครแพ็กเกจใหม่
+  const dashboardLink = `https://www.gusorn.com/`;
 
   const mailOptions = {
     from: process.env.EMAIL_FROM,
@@ -230,7 +230,7 @@ exports.sendRejectionNotificationEmail = async ( user, packageDetails) => {
         หากต้องการสมัครใหม่ กรุณาคลิกปุ่มด้านล่างเพื่อแก้ไขข้อมูลและสมัครอีกครั้ง
       </p>
 
-      <a href="${reapplyLink}" 
+      <a href="${dashboardLink}" 
         style="background: #ff9f00; color: white; padding: 15px 35px; font-size: 18px; text-decoration: none; border-radius: 10px; font-weight: 700; display: inline-block; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); transition: all 0.3s ease-in-out;">
         🔄 สมัครแพ็กเกจใหม่
       </a>
