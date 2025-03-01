@@ -38,6 +38,8 @@ app.use((req, res, next) => {
     "/auth/verify-email",
     "/auth/check-verification",
     "/uploads/payment_proofs",
+    "/uploads/profile_images",
+    "/uploads/intro_videos",
   ];
 
   // ✅ API ที่เปิดให้ทุกที่ แต่ต้องไม่ใช้ `credentials: "include"`
