@@ -3,6 +3,8 @@ const fs = require("fs");
 const express = require("express");
 const PaymentProof = require("../models/PaymentProof");
 const Subscription = require("../models/Subscription");
+const { sendNewSubscriptionEmail, sendSubscriptionConfirmationEmail, sendApprovalNotificationEmail, sendRejectionNotificationEmail } = require("../utils/emailService");
+const User = require("../models/User");
 
 // ✅ ตรวจสอบโฟลเดอร์อัปโหลด
 const uploadDir = path.join(__dirname, "../uploads/payment_proofs");
@@ -30,7 +32,10 @@ exports.uploadPaymentProof = async (req, res) => {
       proofUrl,
       status: "pending",
     });
+    console.log("req.user", req.user);
 
+    await sendNewSubscriptionEmail(packageId, req.user.email);
+    await sendSubscriptionConfirmationEmail(packageId, req.user.email);
     res.json({
       success: true,
       message: "✅ อัปโหลดหลักฐานการชำระเงินเรียบร้อย!",
@@ -109,12 +114,10 @@ exports.approvePayment = async (req, res) => {
     });
 
     if (existingSubscription) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "❌ ผู้ใช้มี Subscription ที่ยังใช้งานได้อยู่แล้ว",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "❌ ผู้ใช้มี Subscription ที่ยังใช้งานได้อยู่แล้ว",
+      });
     }
 
     // ✅ อัปเดตสถานะการชำระเงินเป็น "approved"
@@ -143,16 +146,19 @@ exports.approvePayment = async (req, res) => {
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // ⏳ 30 วันนับจากวันที่สมัคร
       paymentId: payment.id, // 🔗 อ้างอิงถึงหมายเลขรายการชำระเงิน
     });
-
+    const user = await User.findOne({ where: { id:payment.userId },order: [["createdAt", "DESC"]], });
+    const subscription = await Subscription.findOne({
+      where: { userId: user.id, status: "active" },
+      order: [["createdAt", "DESC"]],
+    });
+    await sendApprovalNotificationEmail( user, subscription)
     res.json({ success: true, message: "✅ อนุมัติแพ็กเกจสำเร็จ!" });
   } catch (error) {
     console.error("❌ Error approving payment:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "❌ เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง",
-      });
+    res.status(500).json({
+      success: false,
+      message: "❌ เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง",
+    });
   }
 };
 
@@ -167,7 +173,8 @@ exports.rejectPayment = async (req, res) => {
         .status(404)
         .json({ success: false, message: "ไม่พบหลักฐานการชำระเงิน" });
     }
-
+    const user = await User.findOne({ where: { id:payment.userId },order: [["createdAt", "DESC"]], });
+    await sendRejectionNotificationEmail( user, payment)
     // ❌ อัปเดตสถานะเป็น "rejected"
     payment.status = "rejected";
     await payment.save();
