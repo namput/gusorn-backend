@@ -217,7 +217,7 @@ exports.sendRejectionNotificationEmail = async ( user, packageDetails) => {
       <p style="font-size: 16px; margin-bottom: 10px;"><strong>👤 ชื่อผู้ใช้:</strong> ${user.name}</p>
       <p style="font-size: 16px; margin-bottom: 10px;"><strong>📧 อีเมล:</strong> ${user.email}</p>
       <p style="font-size: 16px; margin-bottom: 10px;"><strong>💼 แพ็กเกจ:</strong> ${packageDetails.packageId}</p>
-      <p style="font-size: 16px; margin-bottom: 10px;"><strong>📅 วันที่สมัคร:</strong> ${packageDetails.startDate}</p>
+      <p style="font-size: 16px; margin-bottom: 10px;"><strong>📅 วันที่สมัคร:</strong> ${packageDetails.createdAt}</p>
 
       <p style="font-size: 18px; color: #e74c3c; font-weight: bold; margin-bottom: 15px;">
         🚫 เหตุผลที่ไม่ผ่านการอนุมัติ:
