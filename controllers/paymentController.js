@@ -188,6 +188,7 @@ exports.approvePayment = async (req, res) => {
         });
 
         if (!existingReferral) {
+ 
           // ✅ บันทึกค่าคอมมิชชั่น
           await Referral.create({
             referrerId: referrer.id,
