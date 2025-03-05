@@ -193,10 +193,8 @@ exports.approvePayment = async (req, res) => {
             referrerId: referrer.id,
             referredUserId: user.id,
             commission: commission,
-            status: "paid",
+            status: "pending",
           });
-
-          console.log(`✅ จ่ายค่าคอมฯ ${commission} บาท ให้ ${referrer.username}`);
         }
       }
     }
