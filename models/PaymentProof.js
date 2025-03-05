@@ -6,22 +6,26 @@ const PaymentProof = sequelize.define(
   "PaymentProof",
   {
     id: {
-      type: DataTypes.INTEGER.UNSIGNED, // ✅ ใช้ UNSIGNED ให้ตรงกับ Foreign Key
+      type: DataTypes.INTEGER.UNSIGNED,
       autoIncrement: true,
       primaryKey: true,
     },
     userId: {
-      type: DataTypes.INTEGER.UNSIGNED, // ✅ ต้องเป็น UNSIGNED ให้ตรงกับ users.id
+      type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
       references: {
-        model: "users", // ✅ ใช้ชื่อ table ที่ตรงกับ `User.js`
+        model: "users",
         key: "id",
       },
       onDelete: "CASCADE",
       onUpdate: "CASCADE",
     },
     packageId: {
-      type: DataTypes.STRING(50),
+      type: DataTypes.ENUM("basic", "standard", "premium", "business"), // ✅ ใช้ ENUM แทน String
+      allowNull: false,
+    },
+    amount: {
+      type: DataTypes.FLOAT, // ✅ เพิ่ม field บันทึกยอดเงินที่จ่าย
       allowNull: false,
     },
     paymentMethod: {
@@ -29,7 +33,7 @@ const PaymentProof = sequelize.define(
       allowNull: false,
     },
     proofUrl: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT, // ✅ ใช้ TEXT เพื่อรองรับ URL ที่ยาว
       allowNull: false,
     },
     status: {

@@ -1,6 +1,7 @@
 const Thread = require("./Thread");
 const Reply = require("./Reply");
 const User = require("./User");
+const Referral = require("./Referral");
 
 // ✅ กำหนดความสัมพันธ์ของ Thread และ Reply
 Thread.hasMany(Reply, { foreignKey: "thread_id", as: "replies", onDelete: "CASCADE" });
@@ -14,4 +15,11 @@ Reply.belongsTo(User, { foreignKey: "user_id", as: "user" });
 User.hasMany(Thread, { foreignKey: "user_id", as: "threads", onDelete: "CASCADE" });
 Thread.belongsTo(User, { foreignKey: "user_id", as: "user" });
 
-module.exports = { Thread, Reply, User };
+// ✅ กำหนดความสัมพันธ์ของ Referral
+User.hasMany(Referral, { foreignKey: "referrerId", as: "referralsGiven", onDelete: "CASCADE" });
+User.hasMany(Referral, { foreignKey: "referredUserId", as: "referralsReceived", onDelete: "CASCADE" });
+
+Referral.belongsTo(User, { foreignKey: "referrerId", as: "referrer" });
+Referral.belongsTo(User, { foreignKey: "referredUserId", as: "referredUser" });
+
+module.exports = { Thread, Reply, User, Referral };

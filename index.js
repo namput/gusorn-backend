@@ -14,6 +14,8 @@ const subscriptionRoutes = require("./routes/subscriptionRoutes");
 const websiteRoutes = require("./routes/websiteRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const forumRoutes = require("./routes/forumRoutes"); // ✅ Import Forum Routes
+const demoRoutes = require("./routes/demoRoutes");
+const commissionsRoutes = require("./routes/commissionsRoutes");
 
 const app = express();
 
@@ -40,6 +42,7 @@ app.use((req, res, next) => {
     "/uploads/payment_proofs",
     "/uploads/profile_images",
     "/uploads/intro_videos",
+    "/demo/tutor/data"
   ];
 
   // ✅ API ที่เปิดให้ทุกที่ แต่ต้องไม่ใช้ `credentials: "include"`
@@ -112,6 +115,8 @@ app.use("/subscription", subscriptionRoutes);
 app.use("/website", websiteRoutes);
 app.use("/payment", paymentRoutes);
 app.use("/forum", forumRoutes); // ✅ เพิ่ม Forum API
+app.use("/demo",demoRoutes);
+app.use("/commissions", commissionsRoutes);
 
 app.get("/", (req, res) => {
   res.redirect("https://www.gusorn.com");

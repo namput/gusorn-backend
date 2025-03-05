@@ -5,7 +5,7 @@ const User = sequelize.define(
   "User",
   {
     id: {
-      type: DataTypes.INTEGER.UNSIGNED, // ✅ ใช้ UNSIGNED ให้ตรงกับ foreign key ใน Subscription
+      type: DataTypes.INTEGER.UNSIGNED,
       autoIncrement: true,
       primaryKey: true,
     },
@@ -27,11 +27,11 @@ const User = sequelize.define(
       },
     },
     phone: {
-      type: DataTypes.STRING(15), // ✅ ใช้ STRING (เพราะบางเบอร์อาจมีเครื่องหมาย +)
+      type: DataTypes.STRING(15),
       allowNull: false,
       validate: {
-        isNumeric: true, // ✅ ต้องเป็นตัวเลขเท่านั้น
-        len: [10, 15], // ✅ จำกัดให้เบอร์โทรศัพท์มี 10-15 หลัก
+        isNumeric: true,
+        len: [10, 15],
       },
     },
     password: {
@@ -47,6 +47,22 @@ const User = sequelize.define(
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
+    // ✅ เพิ่มรหัสเชิญ (Unique Code)
+    referralCode: {
+      type: DataTypes.STRING(10),
+      allowNull: false,
+      unique: true,
+    },
+    // ✅ เก็บ ID ของคนที่เชิญ (ถ้ามี)
+    referrerId: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true,
+      references: {
+        model: "users",
+        key: "id",
+      },
+      onDelete: "SET NULL",
+    },
   },
   {
     tableName: "users",
@@ -55,6 +71,10 @@ const User = sequelize.define(
       {
         unique: true,
         fields: ["phone"],
+      },
+      {
+        unique: true,
+        fields: ["referralCode"], // ✅ ให้แน่ใจว่าไม่มีรหัสซ้ำ
       },
     ],
   }

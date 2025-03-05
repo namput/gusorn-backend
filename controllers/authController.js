@@ -5,12 +5,23 @@ const { sendVerificationEmail } = require("../utils/emailService");
 const TutorProfile = require("../models/TutorProfile");
 const Subscription = require("../models/Subscription");
 const PaymentProof = require("../models/PaymentProof");
+const Referral  = require("../models/Referral");
 const sequelize = require("../config/database");
 
-// ✅ สมัครสมาชิก (เพิ่ม `phone`)
+
+const generateReferralCode = async () => {
+  let referralCode;
+  let existingUser;
+  do {
+    referralCode = Math.random().toString(36).substr(2, 6).toUpperCase();
+    existingUser = await User.findOne({ where: { referralCode } });
+  } while (existingUser);
+  return referralCode;
+};
+
 exports.register = async (req, res) => {
   try {
-    const { name, username, email, phone, password, role } = req.body;
+    const { name, username, email, phone, password, role, referralCode } = req.body;
 
     // ✅ ตรวจสอบว่าชื่อผู้ใช้ซ้ำหรือไม่
     const existingUsername = await User.findOne({ where: { username } });
@@ -33,15 +44,41 @@ exports.register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // ✅ สร้างรหัสเชิญใหม่ให้ผู้ใช้
+    const newReferralCode = await generateReferralCode();
+
+    // ✅ ตรวจสอบว่ามีการใช้รหัสเชิญหรือไม่
+    let referrerId = null;
+    if (referralCode) {
+      const referrer = await User.findOne({ where: { referralCode: referralCode } });
+      if (referrer) {
+        referrerId = referrer.id; // บันทึกว่าใครเป็นผู้เชิญ
+      } else {
+        return res.status(400).json({ message: "รหัสเชิญไม่ถูกต้อง" });
+      }
+    }
+
     // ✅ สร้างผู้ใช้ใหม่
     const newUser = await User.create({
       name,
       username,
       email,
-      phone, // ✅ เพิ่ม phone
+      phone,
       password: hashedPassword,
       role: role || "tutor",
+      referralCode: newReferralCode,
+      referrerId,
     });
+
+    // ✅ หากมี referrer → บันทึกค่าคอมมิชชั่น (ยังไม่จ่ายจนกว่าสมัครแพ็กเกจ)
+    if (referrerId) {
+      await Referral.create({
+        referrerId,
+        referredUserId: newUser.id,
+        commission: 50, // ✅ ต้องอัปเดตให้เป็น % ของแพ็กเกจในฟังก์ชัน subscribePackage
+        status: "pending",
+      });
+    }
 
     // ✅ ส่งอีเมลยืนยัน
     const token = jwt.sign(
@@ -52,17 +89,16 @@ exports.register = async (req, res) => {
 
     await sendVerificationEmail(newUser.email, token);
 
-    res
-      .status(201)
-      .json({
-        message: "สมัครสมาชิกสำเร็จ กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชี",
-        userId: newUser.id,
-      });
+    res.status(201).json({
+      message: "สมัครสมาชิกสำเร็จ กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชี",
+      userId: newUser.id,
+    });
   } catch (error) {
     console.error("❌ เกิดข้อผิดพลาด:", error);
     res.status(500).json({ error: "❌ เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์" });
   }
 };
+
 // ✅ เข้าสู่ระบบ
 exports.login = async (req, res) => {
   try {

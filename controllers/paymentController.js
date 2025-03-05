@@ -5,6 +5,7 @@ const PaymentProof = require("../models/PaymentProof");
 const Subscription = require("../models/Subscription");
 const { sendNewSubscriptionEmail, sendSubscriptionConfirmationEmail, sendApprovalNotificationEmail, sendRejectionNotificationEmail } = require("../utils/emailService");
 const User = require("../models/User");
+const Referral = require("../models/Referral");
 
 // ✅ ตรวจสอบโฟลเดอร์อัปโหลด
 const uploadDir = path.join(__dirname, "../uploads/payment_proofs");
@@ -21,21 +22,42 @@ exports.uploadPaymentProof = async (req, res) => {
         .json({ success: false, message: "❌ กรุณาอัปโหลดไฟล์" });
     }
 
-    const { packageId, paymentMethod } = req.body;
+    const { packageId, paymentMethod, amount } = req.body;
+
+    // ✅ ตรวจสอบว่าค่าที่ต้องการมีครบหรือไม่
+    if (!packageId || !paymentMethod || !amount) {
+      return res.status(400).json({
+        success: false,
+        message: "❌ ข้อมูลไม่ครบ กรุณาระบุ packageId, paymentMethod และ amount",
+      });
+    }
+
     const proofUrl = `/uploads/payment_proofs/${req.file.filename}`;
+
+    // ✅ ตรวจสอบว่า req.user มีข้อมูลหรือไม่
+    if (!req.user || !req.user.userId || !req.user.email) {
+      return res.status(401).json({
+        success: false,
+        message: "❌ ไม่ได้รับข้อมูลผู้ใช้ กรุณาเข้าสู่ระบบใหม่",
+      });
+    }
 
     // ✅ บันทึกข้อมูลลงฐานข้อมูล
     const newProof = await PaymentProof.create({
       userId: req.user.userId,
       packageId,
       paymentMethod,
+      amount: parseFloat(amount), // ✅ แปลง `amount` เป็นตัวเลขก่อนบันทึก
       proofUrl,
       status: "pending",
     });
-    console.log("req.user", req.user);
 
+    console.log("✅ Payment proof uploaded by:", req.user);
+
+    // ✅ ส่งอีเมลแจ้งเตือน
     await sendNewSubscriptionEmail(packageId, req.user.email);
     await sendSubscriptionConfirmationEmail(packageId, req.user.email);
+
     res.json({
       success: true,
       message: "✅ อัปโหลดหลักฐานการชำระเงินเรียบร้อย!",
@@ -45,9 +67,10 @@ exports.uploadPaymentProof = async (req, res) => {
     console.error("❌ Error uploading payment proof:", error);
     res
       .status(500)
-      .json({ success: false, message: "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง" });
+      .json({ success: false, message: "❌ เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง" });
   }
 };
+
 
 // ✅ ตรวจสอบสถานะการชำระเงิน
 exports.checkPaymentStatus = async (req, res) => {
@@ -124,7 +147,7 @@ exports.approvePayment = async (req, res) => {
     payment.status = "approved";
     await payment.save();
 
-    // ✅ ตรวจสอบให้แน่ใจว่ามี `price` และ `paymentMethod`
+    // ✅ ตรวจสอบแพ็กเกจที่สมัคร
     const packagePrices = {
       basic: 99,
       standard: 199,
@@ -132,26 +155,55 @@ exports.approvePayment = async (req, res) => {
       business: 399,
     };
 
-    const price = packagePrices[payment.packageId] || 0; // ❗ ถ้าไม่มี ให้เป็น 0
-    const paymentMethod = payment.paymentMethod || "unknown"; // ❗ ถ้าไม่มี ให้ใช้ค่า "unknown"
+    const price = packagePrices[payment.packageId] || 0;
+    const paymentMethod = payment.paymentMethod || "unknown";
 
     // ✅ สร้าง Subscription ใหม่
-    await Subscription.create({
+    const newSubscription = await Subscription.create({
       userId: payment.userId,
       packageType: payment.packageId,
-      price: price, // 💰 กำหนดราคาแพ็กเกจ
-      paymentMethod: paymentMethod, // 💳 วิธีการชำระเงิน (QR, Credit Card ฯลฯ)
-      startDate: new Date(Date.now()),
+      price: price,
+      paymentMethod: paymentMethod,
+      startDate: new Date(),
       status: "active",
-      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // ⏳ 30 วันนับจากวันที่สมัคร
-      paymentId: payment.id, // 🔗 อ้างอิงถึงหมายเลขรายการชำระเงิน
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      paymentId: payment.id,
     });
-    const user = await User.findOne({ where: { id:payment.userId },order: [["createdAt", "DESC"]], });
-    const subscription = await Subscription.findOne({
-      where: { userId: user.id, status: "active" },
-      order: [["createdAt", "DESC"]],
-    });
-    await sendApprovalNotificationEmail( user, subscription)
+
+    // ✅ ค้นหาข้อมูลผู้ใช้
+    const user = await User.findByPk(payment.userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "❌ ไม่พบผู้ใช้" });
+    }
+
+    // ✅ ตรวจสอบว่าผู้ใช้มี "Referrer" หรือไม่ (มีคนแนะนำหรือเปล่า)
+    if (user.referrerId) {
+      const referrer = await User.findByPk(user.referrerId);
+      if (referrer) {
+        const commission = price * 0.5; // ✅ คำนวณค่าคอมฯ 50%
+
+        // ✅ ตรวจสอบว่าเคยจ่ายค่าคอมฯ ให้คนนี้แล้วหรือยัง
+        const existingReferral = await Referral.findOne({
+          where: { referredUserId: user.id },
+        });
+
+        if (!existingReferral) {
+          // ✅ บันทึกค่าคอมมิชชั่น
+          await Referral.create({
+            referrerId: referrer.id,
+            referredUserId: user.id,
+            commission: commission,
+            status: "paid",
+          });
+
+          console.log(`✅ จ่ายค่าคอมฯ ${commission} บาท ให้ ${referrer.username}`);
+        }
+      }
+    }
+
+    // ✅ ส่งอีเมลแจ้งเตือนอนุมัติแพ็กเกจ
+    await sendApprovalNotificationEmail(user, newSubscription);
+
     res.json({ success: true, message: "✅ อนุมัติแพ็กเกจสำเร็จ!" });
   } catch (error) {
     console.error("❌ Error approving payment:", error);
@@ -161,6 +213,7 @@ exports.approvePayment = async (req, res) => {
     });
   }
 };
+
 
 // ❌ ปฏิเสธการชำระเงิน
 exports.rejectPayment = async (req, res) => {
