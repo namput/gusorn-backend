@@ -116,3 +116,26 @@ exports.getTutorProfile = async (req, res) => {
     res.status(500).json({ success: false, message: "เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์" });
   }
 };
+exports.getUserProfile = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id, {
+      attributes: ["id", "username", "email", "role", "referralCode"], // ✅ เพิ่ม referralCode
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "❌ ไม่พบผู้ใช้",
+      });
+    }
+
+    res.status(200).json({ success: true, data: user });
+  } catch (error) {
+    console.error("❌ Error fetching user profile:", error);
+    res.status(500).json({
+      success: false,
+      message: "❌ ไม่สามารถดึงข้อมูลโปรไฟล์ได้",
+    });
+  }
+};
+

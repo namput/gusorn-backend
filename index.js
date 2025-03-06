@@ -16,6 +16,7 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const forumRoutes = require("./routes/forumRoutes"); // ✅ Import Forum Routes
 const demoRoutes = require("./routes/demoRoutes");
 const commissionsRoutes = require("./routes/commissionsRoutes");
+const adminRoutes = require("./routes/adminRoutes"); // ✅ Import Admin Routes
 
 const app = express();
 
@@ -117,6 +118,7 @@ app.use("/payment", paymentRoutes);
 app.use("/forum", forumRoutes); // ✅ เพิ่ม Forum API
 app.use("/demo",demoRoutes);
 app.use("/commissions", commissionsRoutes);
+app.use("/admin", adminRoutes); // ✅ เชื่อม Route Admin
 
 app.get("/", (req, res) => {
   res.redirect("https://www.gusorn.com");

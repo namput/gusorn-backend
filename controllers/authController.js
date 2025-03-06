@@ -100,6 +100,7 @@ exports.register = async (req, res) => {
 };
 
 // ✅ เข้าสู่ระบบ
+
 exports.login = async (req, res) => {
   try {
     await sequelize.authenticate();
@@ -108,86 +109,71 @@ exports.login = async (req, res) => {
     const { email, password } = req.body;
     const user = await User.findOne({ where: { email } });
 
-    if (!user || !(await bcrypt.compare(password, user.password)))
-      return res
-        .status(401)
-        .json({ message: "❌ อีเมลหรือรหัสผ่านไม่ถูกต้อง" });
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({ message: "❌ อีเมลหรือรหัสผ่านไม่ถูกต้อง" });
+    }
 
-    if (!user.isVerified)
-      return res
-        .status(403)
-        .json({
-          message: "❌ บัญชีของคุณยังไม่ได้รับการยืนยัน กรุณาตรวจสอบอีเมล",
-        });
+    if (!user.isVerified) {
+      return res.status(403).json({ message: "❌ บัญชีของคุณยังไม่ได้รับการยืนยัน กรุณาตรวจสอบอีเมล" });
+    }
 
-    // ✅ ดึงข้อมูล PaymentProof และ Subscription พร้อมกัน
+    // ✅ ดึงข้อมูลที่เกี่ยวข้องพร้อมกัน
     const [payment, subscription, tutorProfile] = await Promise.all([
-      PaymentProof.findOne({
-        where: { userId: user.id },
-        order: [["createdAt", "DESC"]],
-      }),
-      Subscription.findOne({
-        where: { userId: user.id, status: "active" },
-        order: [["createdAt", "DESC"]],
-      }),
+      PaymentProof.findOne({ where: { userId: user.id }, order: [["createdAt", "DESC"]] }),
+      Subscription.findOne({ where: { userId: user.id, status: "active" }, order: [["createdAt", "DESC"]] }),
       TutorProfile.findOne({ where: { userId: user.id } }),
     ]);
 
     const hasProfile = !!tutorProfile;
-    let redirectPath = "/select-package";
+    const packageType = subscription?.packageType || null;
+    const packageStatus = subscription?.status || "none";
 
+    // ✅ กำหนดเส้นทาง Redirect หลัง Login
+    let redirectPath = "/select-package";
     if (payment) {
       if (payment.status === "pending") redirectPath = "/pending-status";
       else if (payment.status === "approved") {
         if (!subscription) redirectPath = "/select-package";
-        else if (
-          subscription.expiresAt &&
-          new Date(subscription.expiresAt) < new Date()
-        )
+        else if (subscription.expiresAt && new Date(subscription.expiresAt) < new Date()) {
           redirectPath = "/select-package";
-        else if (subscription.status === "pending")
+        } else if (subscription.status === "pending") {
           redirectPath = "/pending-status";
-        else
-          redirectPath =
-            subscription.packageType === "basic"
-              ? "/create-profile"
-              : "/dashboard";
+        } else {
+          redirectPath = packageType === "basic" ? "/create-profile" : "/dashboard";
+        }
       }
     }
 
+    // ✅ สร้าง Token
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    res
-      .status(200)
-      .json({
-        message: "✅ เข้าสู่ระบบสำเร็จ",
-        token,
-        user: {
-          id: user.id,
-          name: user.name,
-          username: user.username,
-          email: user.email,
-          role: user.role,
-          hasProfile,
-          package: subscription?.packageType || null,
-          packageStatus: subscription?.status || "none",
-          redirectPath,
-        },
+    // ✅ ส่งข้อมูลเพิ่มเติม
+    res.status(200).json({
+      message: "✅ เข้าสู่ระบบสำเร็จ",
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        referralCode: user.referralCode || null, // ✅ ส่งรหัสเชิญด้วย
         hasProfile,
-        package: subscription?.packageType || null,
-        packageStatus: subscription?.status || "none",
+        package: packageType,
+        packageStatus,
         redirectPath,
-      });
+      },
+    });
   } catch (error) {
     console.error("❌ เกิดข้อผิดพลาด:", error);
     res.status(500).json({ error: "❌ เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์" });
   }
 };
-// ✅ ยืนยันอีเมล
+
 
 // ✅ ยืนยันอีเมล
 exports.verifyEmail = async (req, res) => {
