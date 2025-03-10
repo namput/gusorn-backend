@@ -33,7 +33,7 @@ const data = {
   name: "เอกกี้ สอนเขียนเว็บ",
   email: "subdomain@gmail.com",
   profileImage: "https://apigusorn.neuatech.com/uploads/profile_images/ai.jpg",
-  introVideo: "https://apigusorn.neuatech.com/uploads/intro_videos/1740547216262-918544788.mov",
+  introVideo: "https://apigusorn.neuatech.com/uploads/intro_videos/demo.mov",
   phone: "0987654321",
   location: "กรุงเทพ",
   subdomain: "subdomain",
