@@ -32,6 +32,7 @@ exports.createProfile = async (req, res) => {
       levels,
       experience,
       price,
+      template,
     } = req.body;
 
     // ✅ ตรวจสอบว่า Email ถูกต้องหรือไม่
@@ -82,6 +83,7 @@ exports.createProfile = async (req, res) => {
       schedule: parsedSchedule,
       price: parsedPrice,
       experience: parsedExperience,
+      template,
     });
 
     res.json({ success: true, message: "✅ บันทึกโปรไฟล์สำเร็จ!", data: newProfile });

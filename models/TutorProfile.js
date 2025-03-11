@@ -55,6 +55,10 @@ const TutorProfile = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: true,
     },
+    template: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
     subjects: {
       type: DataTypes.TEXT,
       allowNull: false,
