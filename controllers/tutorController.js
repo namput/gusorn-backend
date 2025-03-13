@@ -8,9 +8,8 @@ const UPLOADS_DIR = "/uploads";
 const PROFILE_IMAGES_DIR = `${UPLOADS_DIR}/profile_images`;
 const INTRO_VIDEOS_DIR = `${UPLOADS_DIR}/intro_videos`;
 
-exports.createProfile = async (req, res) => {
+exports.createOrUpdateProfile = async (req, res) => {
   try {
-
     // ✅ ตรวจสอบว่า `userId` ถูกต้อง
     const userId = req.user?.userId;
     if (!userId) {
@@ -18,6 +17,7 @@ exports.createProfile = async (req, res) => {
     }
 
     const {
+      tutorId, // ✅ เช็ค tutorId ถ้ามีให้ทำการอัปเดต
       fullName,
       phone,
       email,
@@ -64,35 +64,67 @@ exports.createProfile = async (req, res) => {
     const bio = introduction || "";
     const parsedExperience = experience || null;
 
-    // ✅ บันทึกข้อมูลลงฐานข้อมูล
-    const newProfile = await TutorProfile.create({
-      userId,
-      name,
-      phone,
-      email,
-      bio,
-      location,
-      subdomain,
-      profileImage: "https://apigusorn.neuatech.com"+profileImageUrl,
-      introVideo: "https://apigusorn.neuatech.com"+introVideoUrl,
-      teachingMethods: parsedTeachingMethods,
-      ageGroups: parsedAgeGroups,
-      subjects: parsedSubjects,
-      levels: parsedLevels,
-      courses: parsedCourses,
-      schedule: parsedSchedule,
-      price: parsedPrice,
-      experience: parsedExperience,
-      template,
-    });
+    if (tutorId) {
+      // ✅ อัปเดตโปรไฟล์ ถ้ามี `tutorId`
+      const existingProfile = await TutorProfile.findOne({ where: { id: tutorId, userId } });
 
-    res.json({ success: true, message: "✅ บันทึกโปรไฟล์สำเร็จ!", data: newProfile });
+      if (!existingProfile) {
+        return res.status(404).json({ success: false, message: "❌ ไม่พบโปรไฟล์ติวเตอร์" });
+      }
 
+      // ✅ อัปเดตข้อมูล
+      await existingProfile.update({
+        name,
+        phone,
+        email,
+        bio,
+        location,
+        subdomain,
+        profileImage: profileImageUrl ? "https://apigusorn.neuatech.com" + profileImageUrl : existingProfile.profileImage,
+        introVideo: introVideoUrl ? "https://apigusorn.neuatech.com" + introVideoUrl : existingProfile.introVideo,
+        teachingMethods: parsedTeachingMethods,
+        ageGroups: parsedAgeGroups,
+        subjects: parsedSubjects,
+        levels: parsedLevels,
+        courses: parsedCourses,
+        schedule: parsedSchedule,
+        price: parsedPrice,
+        experience: parsedExperience,
+        template,
+      });
+
+      return res.json({ success: true, message: "✅ อัปเดตโปรไฟล์สำเร็จ!", data: existingProfile });
+    } else {
+      // ✅ สร้างโปรไฟล์ใหม่ ถ้ายังไม่มี `tutorId`
+      const newProfile = await TutorProfile.create({
+        userId,
+        name,
+        phone,
+        email,
+        bio,
+        location,
+        subdomain,
+        profileImage: "https://apigusorn.neuatech.com" + profileImageUrl,
+        introVideo: "https://apigusorn.neuatech.com" + introVideoUrl,
+        teachingMethods: parsedTeachingMethods,
+        ageGroups: parsedAgeGroups,
+        subjects: parsedSubjects,
+        levels: parsedLevels,
+        courses: parsedCourses,
+        schedule: parsedSchedule,
+        price: parsedPrice,
+        experience: parsedExperience,
+        template,
+      });
+
+      return res.json({ success: true, message: "✅ บันทึกโปรไฟล์สำเร็จ!", data: newProfile });
+    }
   } catch (error) {
     console.error("❌ Error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 exports.getTutorProfile = async (req, res) => {
   try {
     const userId = req.user.userId; // ✅ ดึง ID ของผู้ใช้ที่ล็อกอินอยู่

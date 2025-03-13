@@ -1,5 +1,5 @@
 const express = require("express");
-const { createProfile, getTutorProfile } = require("../controllers/tutorController");
+const { createOrUpdateProfile, getTutorProfile } = require("../controllers/tutorController");
 const { authenticateUser } = require("../middlewares/authMiddleware");
 const {upload} = require("../middlewares/uploadMiddleware");
 
@@ -16,7 +16,7 @@ router.post(
     }
     next();
   },
-  createProfile
+  createOrUpdateProfile
 );
 router.get("/profile", authenticateUser, getTutorProfile);
 
