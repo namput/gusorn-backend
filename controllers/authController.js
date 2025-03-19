@@ -1,7 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-const { sendVerificationEmail } = require("../utils/emailService");
+const { sendVerificationEmail, sendResetPasswordEmail } = require("../utils/emailService");
 const TutorProfile = require("../models/TutorProfile");
 const Subscription = require("../models/Subscription");
 const PaymentProof = require("../models/PaymentProof");
@@ -270,5 +270,62 @@ exports.checkVerification = async (req, res) => {
     return res
       .status(500)
       .json({ message: "เกิดข้อผิดพลาดในเซิร์ฟเวอร์", verified: false });
+  }
+};
+
+// ✅ ขอรีเซ็ตรหัสผ่าน
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ where: { email } });
+console.log(11);
+
+    if (!user) {
+      return res.status(404).json({ message: "❌ ไม่พบอีเมลในระบบ" });
+    }
+console.log(22);
+
+    // 🔑 สร้าง Token สำหรับรีเซ็ตรหัสผ่าน (ใช้ JWT)
+    const resetToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "1h", // ⏳ Token มีอายุ 1 ชั่วโมง
+    });
+console.log(33);
+
+    // ✅ ส่งอีเมลโดยใช้ `sendResetPasswordEmail`
+    await sendResetPasswordEmail(user.email, resetToken);
+console.log(44);
+
+    res.json({ message: "📩 ลิงก์รีเซ็ตรหัสผ่านถูกส่งไปที่อีเมลของคุณ!" });
+  } catch (error) {
+    console.error("❌ Error:", error);
+    res.status(500).json({ message: "❌ เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง" });
+  }
+};
+
+// ✅ ตั้งรหัสผ่านใหม่
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    // ✅ ตรวจสอบ Token (JWT)
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (error) {
+      return res.status(400).json({ message: "❌ Token ไม่ถูกต้องหรือหมดอายุ" });
+    }
+
+    // ✅ ค้นหาผู้ใช้จาก Token
+    const user = await User.findByPk(decoded.userId);
+    if (!user) return res.status(404).json({ message: "❌ ไม่พบผู้ใช้" });
+
+    // 🔄 เข้ารหัสรหัสผ่านใหม่
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await user.update({ password: hashedPassword });
+
+    res.json({ message: "✅ รหัสผ่านของคุณถูกเปลี่ยนแล้ว!" });
+  } catch (error) {
+    console.error("❌ Error:", error);
+    res.status(500).json({ message: "❌ ไม่สามารถเปลี่ยนรหัสผ่านได้" });
   }
 };

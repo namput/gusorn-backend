@@ -43,7 +43,8 @@ app.use((req, res, next) => {
     "/uploads/payment_proofs",
     "/uploads/profile_images",
     "/uploads/intro_videos",
-    "/demo/tutor/data"
+    "/demo/tutor/data",
+    "/reset-password"
   ];
 
   // ✅ API ที่เปิดให้ทุกที่ แต่ต้องไม่ใช้ `credentials: "include"`

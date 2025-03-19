@@ -61,7 +61,7 @@ exports.sendVerificationEmail = async (email, token) => {
 
 exports.sendNewSubscriptionEmail = async (packageName, email) => {
   const currentYear = new Date().getFullYear();
-  const adminLink = `https://www.gusorn.com/`; // 🔗 ลิงก์ไปหน้าจัดการแพ็กเกจ
+  const adminLink = `${process.env.CLIENT_URL}`; // 🔗 ลิงก์ไปหน้าจัดการแพ็กเกจ
   const mailOptions = {
     from: process.env.EMAIL_FROM,
     to: process.env.EMAIL_REGISTER, // ✉️ ส่งไปที่อีเมล Admin
@@ -149,7 +149,7 @@ exports.sendSubscriptionConfirmationEmail = async (packageDetails, email) => {
 };
 exports.sendApprovalNotificationEmail = async ( user, packageDetails) => {
   const currentYear = new Date().getFullYear();
-  const dashboardLink = `https://www.gusorn.com/`;
+  const dashboardLink = `${process.env.CLIENT_URL}`;
 
   const mailOptions = {
     from: process.env.EMAIL_FROM,
@@ -200,7 +200,7 @@ exports.sendApprovalNotificationEmail = async ( user, packageDetails) => {
 exports.sendRejectionNotificationEmail = async ( user, packageDetails) => {
   const currentYear = new Date().getFullYear();
   const supportEmail = process.env.SUPPORT_EMAIL || "support@gusorn.com";
-  const dashboardLink = `https://www.gusorn.com/`;
+  const dashboardLink = `${process.env.CLIENT_URL}`;
 
   const mailOptions = {
     from: process.env.EMAIL_FROM,
@@ -257,3 +257,31 @@ exports.sendRejectionNotificationEmail = async ( user, packageDetails) => {
   }
 };
 
+// ✅ ฟังก์ชันส่งอีเมลสำหรับ "ลืมรหัสผ่าน"
+exports.sendResetPasswordEmail = async (email, resetToken) => {
+  const resetLink = `${process.env.CLIENT_URL}/reset-password?token=${resetToken}`;
+
+  const mailOptions = {
+    from: process.env.EMAIL_FROM,
+    to: email,
+    subject: "🔑 คำขอรีเซ็ตรหัสผ่าน",
+    html: `
+    <div style="text-align: center; font-family: 'Arial', sans-serif;">
+      <h2 style="color: #333;">🔑 รีเซ็ตรหัสผ่านของคุณ</h2>
+      <p>กดที่ลิงก์ด้านล่างเพื่อรีเซ็ตรหัสผ่านของคุณ:</p>
+      <a href="${resetLink}" 
+         style="background: #007bff; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+        🔑 รีเซ็ตรหัสผ่าน
+      </a>
+      <p>ลิงก์นี้จะหมดอายุใน 1 ชั่วโมง</p>
+    </div>`,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ อีเมลรีเซ็ตรหัสผ่านถูกส่งไปที่ ${email}`);
+  } catch (error) {
+    console.error("❌ ไม่สามารถส่งอีเมลรีเซ็ตรหัสผ่านได้:", error);
+    throw new Error("เกิดข้อผิดพลาดในการส่งอีเมลรีเซ็ตรหัสผ่าน");
+  }
+};
