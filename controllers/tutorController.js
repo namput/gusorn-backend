@@ -4,7 +4,7 @@ const TutorProfile = require("../models/TutorProfile");
 const { User } = require("../models");
 
 // ✅ ตั้งค่าพาธอัปโหลดให้ตรงกับ `uploadMiddleware.js`
-const UPLOADS_DIR = "/uploads";
+const UPLOADS_DIR = "https://apigusorn.neuatech.com/uploads";
 const PROFILE_IMAGES_DIR = `${UPLOADS_DIR}/profile_images`;
 const INTRO_VIDEOS_DIR = `${UPLOADS_DIR}/intro_videos`;
 
