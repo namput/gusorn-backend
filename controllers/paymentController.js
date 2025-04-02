@@ -12,7 +12,12 @@ const uploadDir = path.join(__dirname, "../uploads/payment_proofs");
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
-
+const packageDetails = {
+  basic: 99,
+  standard: 199,
+  premium: 299,
+  business: 399,
+};
 // ✅ Controller: อัปโหลดหลักฐานการชำระเงิน
 exports.uploadPaymentProof = async (req, res) => {
   try {
@@ -108,16 +113,41 @@ exports.getPendingPayments = async (req, res) => {
   try {
     const pendingPayments = await PaymentProof.findAll({
       where: { status: "pending" },
+      include: [
+        {
+          model: User,
+          attributes: ["username", "email"],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
     });
 
-    res.json({ success: true, data: pendingPayments });
+    const formatted = pendingPayments.map((payment) => {
+      const packageId = payment.packageId;
+      const price = packageDetails[packageId] ?? 0;
+      const packageName = `แพ็กเกจ ${packageId.charAt(0).toUpperCase() + packageId.slice(1)}`;
+
+      return {
+        id: payment.id,
+        userId: payment.userId,
+        username: payment.User?.username || "-",
+        email: payment.User?.email || "-",
+        packageId,
+        packageName,
+        price,
+        createdAt: payment.createdAt,
+        proofUrl: payment.proofUrl,
+        status: payment.status,
+      };
+    });
+
+    res.json({ success: true, data: formatted });
   } catch (error) {
     console.error("❌ Error fetching pending payments:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "เกิดข้อผิดพลาดในการโหลดข้อมูล" });
+    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาดในการโหลดข้อมูล" });
   }
 };
+
 
 // ✅ อนุมัติการชำระเงิน & สร้าง Subscription
 exports.approvePayment = async (req, res) => {
