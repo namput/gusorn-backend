@@ -89,27 +89,30 @@ exports.deleteWebsite = async (req, res) => {
 };
 exports.getWebsite = async (req, res) => {
   try {
-    const subdomain = req.params.subdomain; // ดึง subdomain 
+    const subdomain = req.params.subdomain;
 
-    // ค้นหาเว็บไซต์ที่เป็นของผู้ใช้
     const website = await TutorProfile.findOne({
       where: { subdomain },
       include: [
         {
           model: Templates,
+          as: "template", // ✅ ต้องตรงกับที่เพิ่งเพิ่ม
         },
+      
       ],
     });
 
     if (!website) {
-      return res.status(404).json({ message: "ไม่พบเว็บไซต์ของคุณ" });
+      return res.status(404).json({ success: false, message: "ไม่พบเว็บไซต์ "+subdomain  });
     }
 
     res.status(200).json({
-      message: "ดึงข้อมูลเว็บไซต์สำเร็จ!",
+      success: true,
       website,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("❌ getWebsite error:", error);
+    res.status(500).json({ success: false, error: error.message });
   }
-}
+};
+

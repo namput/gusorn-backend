@@ -55,8 +55,11 @@ app.use((req, res, next) => {
   ];
 
   // ✅ API ที่ต้องใช้ `allowedOrigins` แต่ไม่ต้องใช้ Token (Login/Register)
-  const authRoutes = ["/auth/login"];
-
+  const openRoutes = ["/auth/login","/website/"];
+  const isLocalhostSubdomain = /^http:\/\/.+\.localhost:5173$/.test(origin);
+  const isProductionSubdomain = /^https:\/\/.+\.gusorn\.com$/.test(origin);
+  const allowOrigin = isLocalhostSubdomain || isProductionSubdomain ? origin : null;
+ 
   // ✅ API ที่ต้องใช้ `allowedOrigins` และต้องมี Token (`Authorization`)
   const restrictedRoutes = ["/forum/threads","/forum/replies"];
 
@@ -78,7 +81,7 @@ app.use((req, res, next) => {
     }
   }
   // ✅ Login/Register ต้องมาจาก Origin ที่กำหนด
-  else if (authRoutes.some(route => req.path.startsWith(route)) && allowedOrigins.includes(origin)) {
+  else if (openRoutes.some(route => req.path.startsWith(route)) && allowedOrigins.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
@@ -96,7 +99,12 @@ app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
     res.setHeader("Access-Control-Allow-Credentials", "true");
-  } 
+  }  else if (allowOrigin) {
+    res.setHeader("Access-Control-Allow-Origin", allowOrigin);
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+  }
   // ❌ บล็อก Origin ที่ไม่ได้รับอนุญาต (ใช้ HTTP 403)
   else {
     return res.status(403).json({ message: "Access Denied: Origin Not Allowed" });

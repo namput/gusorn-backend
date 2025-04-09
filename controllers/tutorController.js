@@ -32,7 +32,7 @@ exports.createOrUpdateProfile = async (req, res) => {
       levels,
       experience,
       price,
-      template,
+      templateId,
     } = req.body;
 
     // ✅ ตรวจสอบว่า Email ถูกต้องหรือไม่
@@ -90,7 +90,7 @@ exports.createOrUpdateProfile = async (req, res) => {
         schedule: parsedSchedule,
         price: parsedPrice,
         experience: parsedExperience,
-        template,
+        templateId,
       });
 
       return res.json({ success: true, message: "✅ อัปเดตโปรไฟล์สำเร็จ!", data: existingProfile });
@@ -114,7 +114,7 @@ exports.createOrUpdateProfile = async (req, res) => {
         schedule: parsedSchedule,
         price: parsedPrice,
         experience: parsedExperience,
-        template,
+        templateId,
       });
 
       return res.json({ success: true, message: "✅ บันทึกโปรไฟล์สำเร็จ!", data: newProfile });

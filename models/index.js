@@ -32,17 +32,21 @@ PaymentProof.belongsTo(User, { foreignKey: "userId" });
 
 // TutorProfile.js
 TutorProfile.belongsTo(Templates, {
-    foreignKey: "templateId", // หรือควรใช้ชื่อว่า templateId จะชัดเจนกว่า
+    foreignKey: "templateId",
+    as: "template", // ✅ เพิ่มตรงนี้ให้ตรงกับใน include
     onDelete: "CASCADE",
     onUpdate: "CASCADE",
   });
   
+  
   // Templates.js
   Templates.hasMany(TutorProfile, {
-    foreignKey: "templateId", // หรือ "templateId" ต้องตรงกัน
+    foreignKey: "templateId",
+    as: "tutorProfiles", // ใช้หรือไม่ก็ได้
     onDelete: "CASCADE",
     onUpdate: "CASCADE",
   });
+  
   
 
 
