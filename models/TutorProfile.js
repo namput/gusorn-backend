@@ -1,6 +1,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/database");
 const User = require("./User");
+const Templates = require("./Templates");
 
 const TutorProfile = sequelize.define(
   "TutorProfile",
@@ -55,9 +56,15 @@ const TutorProfile = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: true,
     },
-    template: {
-      type: DataTypes.STRING(255),
-      allowNull: true,
+    templateId: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: false,
+      references: {
+        model: Templates,
+        key: "id",
+      },
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
     },
     subjects: {
       type: DataTypes.TEXT,

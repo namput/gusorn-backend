@@ -6,7 +6,8 @@ const Website = require("./models/Website");
 const PaymentProof = require("./models/PaymentProof");
 const Referral = require("./models/Referral");
 const Payment = require("./models/Payment");
-
+const Templates = require("./models/Templates");
+const Package = require("./models/Package");
 // ✅ Import Forum Models และตั้งค่าความสัมพันธ์
 const { Thread, Reply } = require("./models");
 

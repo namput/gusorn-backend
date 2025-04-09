@@ -1,5 +1,8 @@
 const Website = require("../models/Website");
 const User = require("../models/User");
+const e = require("express");
+const TutorProfile = require("../models/TutorProfile");
+const Templates = require("../models/Templates");
 
 exports.createWebsite = async (req, res) => {
   try {
@@ -84,3 +87,29 @@ exports.deleteWebsite = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+exports.getWebsite = async (req, res) => {
+  try {
+    const subdomain = req.params.subdomain; // ดึง subdomain 
+
+    // ค้นหาเว็บไซต์ที่เป็นของผู้ใช้
+    const website = await TutorProfile.findOne({
+      where: { subdomain },
+      include: [
+        {
+          model: Templates,
+        },
+      ],
+    });
+
+    if (!website) {
+      return res.status(404).json({ message: "ไม่พบเว็บไซต์ของคุณ" });
+    }
+
+    res.status(200).json({
+      message: "ดึงข้อมูลเว็บไซต์สำเร็จ!",
+      website,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}

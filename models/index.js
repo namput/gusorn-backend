@@ -4,6 +4,9 @@ const User = require("./User");
 const Referral = require("./Referral");
 const PaymentProof = require("./PaymentProof");
 const Package = require("./Package");
+const Templates = require("./Templates");
+const TutorProfile = require("./TutorProfile");
+
 
 // ✅ กำหนดความสัมพันธ์ของ Thread และ Reply
 Thread.hasMany(Reply, { foreignKey: "thread_id", as: "replies", onDelete: "CASCADE" });
@@ -26,6 +29,21 @@ Referral.belongsTo(User, { foreignKey: "referredUserId", as: "referredUser" });
 
 // PaymentProof.js
 PaymentProof.belongsTo(User, { foreignKey: "userId" });
+
+// TutorProfile.js
+TutorProfile.belongsTo(Templates, {
+    foreignKey: "templateId", // หรือควรใช้ชื่อว่า templateId จะชัดเจนกว่า
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  });
+  
+  // Templates.js
+  Templates.hasMany(TutorProfile, {
+    foreignKey: "templateId", // หรือ "templateId" ต้องตรงกัน
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  });
+  
 
 
 module.exports = { Thread, Reply, User, Referral, Package, PaymentProof };
