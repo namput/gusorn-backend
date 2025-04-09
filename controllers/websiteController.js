@@ -90,29 +90,52 @@ exports.deleteWebsite = async (req, res) => {
 exports.getWebsite = async (req, res) => {
   try {
     const subdomain = req.params.subdomain;
-
-    const website = await TutorProfile.findOne({
-      where: { subdomain },
-      include: [
-        {
-          model: Templates,
-          as: "template", // ✅ ต้องตรงกับที่เพิ่งเพิ่ม
-        },
-      
-      ],
-    });
-
-    if (!website) {
-      return res.status(404).json({ success: false, message: "ไม่พบเว็บไซต์ "+subdomain  });
+    if (subdomain == "demo1" || subdomain == "demo2" || subdomain == "demo3") {
+      const website = await TutorProfile.findOne({
+        where: { 'id':1 },
+        include: [
+          {
+            model: Templates,
+            as: "template", // ✅ ต้องตรงกับที่เพิ่งเพิ่ม
+          },
+        ],
+      });
+      if (!website) {
+        return res
+          .status(404)
+          .json({ success: false, message: "ไม่พบเว็บไซต์ " + subdomain });
+      }
+  
+      res.status(200).json({
+        success: true,
+        website,
+      });
+    }else{
+      const website = await TutorProfile.findOne({
+        where: { subdomain },
+        include: [
+          {
+            model: Templates,
+            as: "template", // ✅ ต้องตรงกับที่เพิ่งเพิ่ม
+          },
+        ],
+      });
+      if (!website) {
+        return res
+          .status(404)
+          .json({ success: false, message: "ไม่พบเว็บไซต์ " + subdomain });
+      }
+  
+      res.status(200).json({
+        success: true,
+        website,
+      });
     }
 
-    res.status(200).json({
-      success: true,
-      website,
-    });
+
+   
   } catch (error) {
     console.error("❌ getWebsite error:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 };
-
