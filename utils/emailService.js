@@ -45,7 +45,7 @@ exports.sendVerificationEmail = async (email, token) => {
     </div>
 
     <div style="background-color: #222; padding: 15px; text-align: center; color: white; font-size: 12px; border-radius: 0 0 15px 15px;">
-      <p>© ${currentYear} GuSorn. All rights reserved. | <a href="https://gusorn.com" style="color: #ff9f00; text-decoration: none;">Visit GuSorn</a></p>
+      <p>© ${currentYear} GuSorn. All rights reserved. | <a href="https://guson.in.th" style="color: #ff9f00; text-decoration: none;">Visit GuSorn</a></p>
     </div>
   `,
   };
@@ -89,7 +89,7 @@ exports.sendNewSubscriptionEmail = async (packageName, email) => {
     </div>
 
     <div style="background-color: #222; padding: 15px; text-align: center; color: white; font-size: 12px; border-radius: 0 0 15px 15px;">
-      <p>&copy; ${currentYear} GuSorn. All rights reserved. | <a href="https://gusorn.com" style="color: #ff9f00; text-decoration: none;">Visit GuSorn</a></p>
+      <p>&copy; ${currentYear} GuSorn. All rights reserved. | <a href="https://guson.in.th" style="color: #ff9f00; text-decoration: none;">Visit GuSorn</a></p>
     </div>
   `,
   };
@@ -133,7 +133,7 @@ exports.sendSubscriptionConfirmationEmail = async (packageDetails, email) => {
     </div>
 
     <div style="background-color: #222; padding: 15px; text-align: center; color: white; font-size: 12px; border-radius: 0 0 15px 15px;">
-      <p>© ${currentYear} GuSorn. All rights reserved. | <a href="https://gusorn.com" style="color: #ff9f00; text-decoration: none;">Visit GuSorn</a></p>
+      <p>© ${currentYear} GuSorn. All rights reserved. | <a href="https://guson.in.th" style="color: #ff9f00; text-decoration: none;">Visit GuSorn</a></p>
     </div>
   `,
   };
@@ -184,7 +184,7 @@ exports.sendApprovalNotificationEmail = async ( user, packageDetails) => {
     </div>
 
     <div style="background-color: #222; padding: 15px; text-align: center; color: white; font-size: 12px; border-radius: 0 0 15px 15px;">
-      <p>© ${currentYear} GuSorn. All rights reserved. | <a href="https://gusorn.com" style="color: #ff9f00; text-decoration: none;">Visit GuSorn</a></p>
+      <p>© ${currentYear} GuSorn. All rights reserved. | <a href="https://guson.in.th" style="color: #ff9f00; text-decoration: none;">Visit GuSorn</a></p>
     </div>
   `,
   };
@@ -242,7 +242,7 @@ exports.sendRejectionNotificationEmail = async ( user, packageDetails) => {
     </div>
 
     <div style="background-color: #222; padding: 15px; text-align: center; color: white; font-size: 12px; border-radius: 0 0 15px 15px;">
-      <p>© ${currentYear} GuSorn. All rights reserved. | <a href="https://gusorn.com" style="color: #ff9f00; text-decoration: none;">Visit GuSorn</a></p>
+      <p>© ${currentYear} GuSorn. All rights reserved. | <a href="https://guson.in.th" style="color: #ff9f00; text-decoration: none;">Visit GuSorn</a></p>
     </div>
   `,
   };
