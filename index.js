@@ -18,7 +18,7 @@ const demoRoutes = require("./routes/demoRoutes");
 const commissionsRoutes = require("./routes/commissionsRoutes");
 const adminRoutes = require("./routes/adminRoutes"); // ✅ Import Admin Routes
 const templatesRoutes = require("./routes/templatesRoutes"); // ✅ Import Templates Routes
-
+const shortLinkRoutes = require("./routes/shortLinkRoutes"); // ✅ Import Short Link Routes
 const app = express();
 
 // ✅ ตรวจสอบและสร้างโฟลเดอร์ `uploads/`
@@ -32,7 +32,7 @@ app.use(morgan("dev"));
 app.use(express.json({ limit: "1030mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1030mb" }));
 app.use("/uploads", express.static(uploadDir));
-const allowedOrigins = ["https://www.gusorn.com","https://www.guson.in.th", "http://localhost:5173", "https://apigusorn.neuatech.com", "www.gusorn.com", "gusorn.com", "http://www.gusorn.com", "www.guson.in.th", "guson.in.th", "http://www.guson.in.th"];
+const allowedOrigins = ["https://www.gusorn.com","https://www.guson.co", "http://localhost:5173", "https://apigusorn.neuatech.com", "www.gusorn.com", "gusorn.com", "http://www.gusorn.com", "www.guson.co", "guson.co", "http://www.guson.co"];
 
 app.use((req, res, next) => {
   const origin = req.headers.origin || "";
@@ -130,9 +130,10 @@ app.use("/demo",demoRoutes);
 app.use("/commissions", commissionsRoutes);
 app.use("/admin", adminRoutes); // ✅ เชื่อม Route Admin
 app.use("/templates", templatesRoutes); // ✅ เชื่อม Route Templates)
+app.use("/short" ,shortLinkRoutes);
 
 app.get("/", (req, res) => {
-  res.redirect("https://www.guson.in.th");
+  res.redirect("https://www.guson.co");
 });
 app.get("/health", (req, res) => {
   res.json({ status: "running" });
