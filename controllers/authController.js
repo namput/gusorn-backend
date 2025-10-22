@@ -187,12 +187,12 @@ exports.verifyEmail = async (req, res) => {
     if (!user) return res.status(404).json({ message: "ไม่พบผู้ใช้" });
 
     if (user.isVerified)
-      return res.redirect("https://www.guson.co/dashboard");
+      return res.redirect("https://www.guson.in.th/dashboard");
 
     user.isVerified = true;
     await user.save();
 
-    return res.redirect("https://www.guson.co/dashboard");
+    return res.redirect("https://www.guson.in.th/dashboard");
   } catch (error) {
     console.error("❌ เกิดข้อผิดพลาด:", error);
     res.status(400).json({ message: "Token ไม่ถูกต้องหรือหมดอายุ" });

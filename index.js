@@ -31,7 +31,7 @@ app.use(morgan("dev"));
 app.use(express.json({ limit: "1030mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1030mb" }));
 app.use("/uploads", express.static(uploadDir));
-const allowedOrigins = ["https://www.gusorn.com","https://www.guson.co", "http://localhost:5173", "https://apigusorn.neuatech.com", "www.gusorn.com", "gusorn.com", "https://www.gusorn.com", "www.guson.co", "guson.co", "https://guson.co"];
+const allowedOrigins = ["https://www.gusorn.com","https://www.guson.co","https://www.guson.in.th","https://.guson.in.th", "http://localhost:5173", "https://apigusorn.neuatech.com", "www.gusorn.com", "gusorn.com", "https://www.gusorn.com", "www.guson.co", "guson.co", "https://guson.co"];
 
 app.use((req, res, next) => {
   const origin = req.headers.origin || "";
@@ -132,7 +132,7 @@ app.use("/templates", templatesRoutes); // ✅ เชื่อม Route Template
 
 
 app.get("/", (req, res) => {
-  res.redirect("https://www.guson.co");
+  res.redirect("https://www.guson.in.th");
 });
 app.get("/health", (req, res) => {
   res.json({ status: "running" });
