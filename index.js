@@ -132,7 +132,7 @@ app.use("/templates", templatesRoutes); // ✅ เชื่อม Route Template
 
 
 app.get("/", (req, res) => {
-  res.redirect("https://www.guson.in.th");
+  res.redirect("https://kyupikyupi.com/");
 });
 app.get("/health", (req, res) => {
   res.json({ status: "running" });
