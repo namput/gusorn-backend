@@ -31,7 +31,24 @@ app.use(morgan("dev"));
 app.use(express.json({ limit: "1030mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1030mb" }));
 app.use("/uploads", express.static(uploadDir));
-const allowedOrigins = ["https://www.gusorn.com","https://www.guson.co","https://www.guson.in.th","https://.guson.in.th", "http://localhost:5173", "https://apigusorn.neuatech.com", "www.gusorn.com", "gusorn.com", "https://www.gusorn.com", "www.guson.co", "guson.co", "https://guson.co","https://kyupikyupi.com/","https://www.kyupikyupi.com/", "kyupikyupi.com", "www.kyupikyupi.com"];
+const allowedOrigins = [
+  "https://www.gusorn.com",
+  "https://www.guson.co",
+  "https://www.guson.in.th",
+  "https://.guson.in.th",
+  "http://localhost:5173",
+  "https://apigusorn.neuatech.com",
+  "www.gusorn.com",
+  "gusorn.com",
+  "https://www.gusorn.com",
+  "www.guson.co",
+  "guson.co",
+  "https://guson.co",
+  "https://kyupikyupi.com",
+  "https://www.kyupikyupi.com",
+  "kyupikyupi.com",
+  "www.kyupikyupi.com",
+];
 
 app.use((req, res, next) => {
   const origin = req.headers.origin || "";
@@ -44,7 +61,7 @@ app.use((req, res, next) => {
     "/uploads/profile_images",
     "/uploads/intro_videos",
     "/demo/tutor/data",
-    "/reset-password"
+    "/reset-password",
   ];
 
   // ✅ API ที่เปิดให้ทุกที่ แต่ต้องไม่ใช้ `credentials: "include"`
@@ -54,59 +71,94 @@ app.use((req, res, next) => {
   ];
 
   // ✅ API ที่ต้องใช้ `allowedOrigins` แต่ไม่ต้องใช้ Token (Login/Register)
-  const openRoutes = ["/auth/login","/website/"];
+  const openRoutes = ["/auth/login", "/website/"];
   const isLocalhostSubdomain = /^http:\/\/.+\.localhost:5173$/.test(origin);
   const isProductionSubdomain = /^https:\/\/.+\.kyupikyupi\.com$/.test(origin);
-  const allowOrigin = isLocalhostSubdomain || isProductionSubdomain ? origin : null;
- 
+  const allowOrigin =
+    isLocalhostSubdomain || isProductionSubdomain ? origin : null;
+
   // ✅ API ที่ต้องใช้ `allowedOrigins` และต้องมี Token (`Authorization`)
-  const restrictedRoutes = ["/forum/threads","/forum/replies"];
+  const restrictedRoutes = ["/forum/threads", "/forum/replies"];
 
   // ✅ Public API ใช้ `*` แต่ต้องไม่มี `credentials: "include"`
-  if (globalPublicRoutes.some(route => req.path.startsWith(route))) {
+  if (globalPublicRoutes.some((route) => req.path.startsWith(route))) {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization",
+    );
   }
   // ✅ Forum API (GET) ต้องไม่ใช้ `*` แต่ต้องกำหนด `allowedOrigins` เพราะใช้ `credentials: "include"`
-  else if (forumPublicRoutes.some(route => req.path.startsWith(route))) {
+  else if (forumPublicRoutes.some((route) => req.path.startsWith(route))) {
     if (allowedOrigins.includes(origin)) {
       res.setHeader("Access-Control-Allow-Origin", origin);
       res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-      res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+      res.setHeader(
+        "Access-Control-Allow-Headers",
+        "Content-Type, Authorization",
+      );
       res.setHeader("Access-Control-Allow-Credentials", "true"); // ✅ รองรับ Credentials
     } else {
-      return res.status(403).json({ message: "Access Denied: Origin Not Allowed" });
+      return res
+        .status(403)
+        .json({ message: "Access Denied: Origin Not Allowed" });
     }
   }
   // ✅ Login/Register ต้องมาจาก Origin ที่กำหนด
-  else if (openRoutes.some(route => req.path.startsWith(route)) && allowedOrigins.includes(origin)) {
+  else if (
+    openRoutes.some((route) => req.path.startsWith(route)) &&
+    allowedOrigins.includes(origin)
+  ) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization",
+    );
   }
   // ✅ API ที่ต้องใช้ Token และต้องมาจาก Origin ที่อนุญาต (POST /forum/threads)
-  else if (restrictedRoutes.some(route => req.path.startsWith(route)) && allowedOrigins.includes(origin)) {
+  else if (
+    restrictedRoutes.some((route) => req.path.startsWith(route)) &&
+    allowedOrigins.includes(origin)
+  ) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Access-Control-Allow-Methods", "POST");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization",
+    );
     res.setHeader("Access-Control-Allow-Credentials", "true"); // ✅ ต้องใช้ Credentials (Token)
   }
   // ✅ API อื่น ๆ ที่ต้องใช้ Token และต้องอยู่ใน `allowedOrigins`
   else if (allowedOrigins.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.setHeader(
+      "Access-Control-Allow-Methods",
+      "GET, POST, PUT, DELETE, OPTIONS",
+    );
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization",
+    );
     res.setHeader("Access-Control-Allow-Credentials", "true");
-  }  else if (allowOrigin) {
+  } else if (allowOrigin) {
     res.setHeader("Access-Control-Allow-Origin", allowOrigin);
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.setHeader(
+      "Access-Control-Allow-Methods",
+      "GET, POST, PUT, DELETE, OPTIONS",
+    );
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization",
+    );
     res.setHeader("Access-Control-Allow-Credentials", "true");
   }
   // ❌ บล็อก Origin ที่ไม่ได้รับอนุญาต (ใช้ HTTP 403)
   else {
-    return res.status(403).json({ message: "Access Denied: Origin Not Allowed" });
+    return res
+      .status(403)
+      .json({ message: "Access Denied: Origin Not Allowed" });
   }
 
   // ✅ ตอบกลับ OPTIONS Request (Preflight) ทันที
@@ -125,11 +177,10 @@ app.use("/subscription", subscriptionRoutes);
 app.use("/website", websiteRoutes);
 app.use("/payment", paymentRoutes);
 app.use("/forum", forumRoutes); // ✅ เพิ่ม Forum API
-app.use("/demo",demoRoutes);
+app.use("/demo", demoRoutes);
 app.use("/commissions", commissionsRoutes);
 app.use("/admin", adminRoutes); // ✅ เชื่อม Route Admin
 app.use("/templates", templatesRoutes); // ✅ เชื่อม Route Templates)
-
 
 app.get("/", (req, res) => {
   res.redirect("https://kyupikyupi.com/");
