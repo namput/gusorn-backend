@@ -56,7 +56,7 @@ app.use((req, res, next) => {
   // ✅ API ที่ต้องใช้ `allowedOrigins` แต่ไม่ต้องใช้ Token (Login/Register)
   const openRoutes = ["/auth/login","/website/"];
   const isLocalhostSubdomain = /^http:\/\/.+\.localhost:5173$/.test(origin);
-  const isProductionSubdomain = /^https:\/\/.+\.guson\.co$/.test(origin);
+  const isProductionSubdomain = /^https:\/\/.+\.kyupikyupi\.com$/.test(origin);
   const allowOrigin = isLocalhostSubdomain || isProductionSubdomain ? origin : null;
  
   // ✅ API ที่ต้องใช้ `allowedOrigins` และต้องมี Token (`Authorization`)
